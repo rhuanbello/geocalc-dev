@@ -12,14 +12,21 @@ import {
   MapPin,
   TriangleAlert,
 } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   Bar,
   CartesianGrid,
   ComposedChart,
   Line,
   ResponsiveContainer,
-  Tooltip,
+  Tooltip as ChartTooltip,
   XAxis,
   YAxis,
 } from "recharts";
@@ -27,6 +34,20 @@ import { InmetStationCombobox } from "@/components/InmetStationCombobox";
 import { LocationCombobox } from "@/components/LocationCombobox";
 import { MapPicker, type MapPoint } from "@/components/MapPicker";
 import { StaticCombobox } from "@/components/StaticCombobox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shadcn/components/ui/tooltip";
+import {
+  Toast,
+  ToastClose,
+  ToastProvider,
+  ToastProgress,
+  ToastTitle,
+  ToastViewport,
+} from "@/shadcn/components/ui/toast";
 import {
   fetchClimateNormals,
   reverseGeocodePoint,
@@ -71,6 +92,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 const DEFAULT_START_YEAR = 1991;
 const DEFAULT_END_YEAR = 2020;
 const INMET_PERIOD = "1991-2020";
+const NOTIFICATION_DURATION = 4000;
 const CLIMATE_PERIOD_PRESETS = getClimatePeriodPresets();
 const INMET_STATIONS = listInmetStations();
 const EMPTY_MONTHLY_TEXT_INPUTS: MonthlyTextInput[] = MONTHS.map(() => ({
@@ -182,6 +204,12 @@ export function App() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [missingMonths, setMissingMonths] = useState<number[]>([]);
+  const [notifications, setNotifications] = useState<Array<{
+    id: number;
+    message: string;
+  }>>([]);
+  const nextNotificationId = useRef(0);
+  const notificationTimeouts = useRef(new Map<number, ReturnType<typeof setTimeout>>());
 
   const monthlyInputs = useMemo<MonthlyInput[]>(
     () =>
@@ -447,9 +475,46 @@ export function App() {
     setStatusMessage("Tabela limpa para preenchimento manual.");
   };
 
+  const dismissNotification = (id: number) => {
+    const timeout = notificationTimeouts.current.get(id);
+
+    if (timeout !== undefined) {
+      window.clearTimeout(timeout);
+      notificationTimeouts.current.delete(id);
+    }
+
+    setNotifications((current) =>
+      current.filter((notification) => notification.id !== id),
+    );
+  };
+
+  const showNotification = (message: string) => {
+    const id = nextNotificationId.current++;
+
+    setNotifications((current) => [
+      ...current,
+      { id, message }
+    ]);
+
+    notificationTimeouts.current.set(
+      id,
+      window.setTimeout(() => dismissNotification(id), NOTIFICATION_DURATION),
+    );
+  };
+
+  useEffect(
+    () => () => {
+      notificationTimeouts.current.forEach((timeout) =>
+        window.clearTimeout(timeout),
+      );
+    },
+    [],
+  );
+
   const copyReport = async () => {
     await navigator.clipboard.writeText(report);
     setStatusMessage("Síntese copiada.");
+    showNotification("Síntese copiada para a área de transferência.");
   };
 
   const exportExcel = async () => {
@@ -467,67 +532,94 @@ export function App() {
       climateModel: CLIMATE_MODEL_LABEL,
     });
     setStatusMessage("Planilha Excel exportada.");
+    showNotification("Planilha Excel exportada com sucesso.");
   };
 
   return (
-    <div className="app-layout">
-      <AppSidebar />
+    <TooltipProvider>
+      <ToastProvider duration={NOTIFICATION_DURATION}>
+        <div className="app-layout">
+          <AppSidebar />
 
-      <main className="app-shell">
-        <ModuleHeader />
+        <main className="app-shell">
+          <ModuleHeader />
 
-        <MethodologyPanel />
+          <MethodologyPanel />
 
-        <ClimateMethodPanel />
+          <ClimateMethodPanel />
 
-        <ClimatePanel
-          selectedLocation={selectedLocation}
-          selectedPoint={selectedPoint}
-          climateDataSource={climateDataSource}
-          selectedInmetStation={selectedInmetStation}
-          factorSelection={factorSelection}
-          startYear={startYear}
-          endYear={endYear}
-          periodPreset={periodPreset}
-          effectiveEndDate={effectiveEndDate}
-          canImport={canImport}
-          isImporting={isImporting}
-          isIdentifyingLocation={isIdentifyingLocation}
-          statusMessage={statusMessage}
-          errorMessage={errorMessage}
-          missingMonths={missingMonths}
-          waterBalanceErrors={waterBalance.errors}
-          onClimateDataSourceChange={updateClimateDataSource}
-          onPointChange={updatePoint}
-          onMapPointChange={(point) => void updatePointFromMap(point)}
-          onInmetStationChange={selectInmetStation}
-          onLocationClear={clearLocation}
-          onLocationSearchError={setErrorMessage}
-          onFactorSelectionChange={setFactorSelection}
-          onPeriodPresetChange={updatePeriodPreset}
-          onStartYearChange={updateStartYear}
-          onEndYearChange={updateEndYear}
-          onImportClimate={() => void handleImportClimate()}
-        />
+          <ClimatePanel
+            selectedLocation={selectedLocation}
+            selectedPoint={selectedPoint}
+            climateDataSource={climateDataSource}
+            selectedInmetStation={selectedInmetStation}
+            factorSelection={factorSelection}
+            startYear={startYear}
+            endYear={endYear}
+            periodPreset={periodPreset}
+            effectiveEndDate={effectiveEndDate}
+            canImport={canImport}
+            isImporting={isImporting}
+            isIdentifyingLocation={isIdentifyingLocation}
+            statusMessage={statusMessage}
+            errorMessage={errorMessage}
+            missingMonths={missingMonths}
+            waterBalanceErrors={waterBalance.errors}
+            onClimateDataSourceChange={updateClimateDataSource}
+            onPointChange={updatePoint}
+            onMapPointChange={(point) => void updatePointFromMap(point)}
+            onInmetStationChange={selectInmetStation}
+            onLocationClear={clearLocation}
+            onLocationSearchError={setErrorMessage}
+            onFactorSelectionChange={setFactorSelection}
+            onPeriodPresetChange={updatePeriodPreset}
+            onStartYearChange={updateStartYear}
+            onEndYearChange={updateEndYear}
+            onImportClimate={() => void handleImportClimate()}
+          />
 
-        <CalculationTable
-          rows={waterBalance.rows}
-          inputs={monthlyTextInputs}
-          hasAnyInput={hasAnyInput}
-          onInputChange={updateMonthlyInput}
-          onClearInputs={clearInputs}
-        />
+          <CalculationTable
+            rows={waterBalance.rows}
+            inputs={monthlyTextInputs}
+            hasAnyInput={hasAnyInput}
+            onInputChange={updateMonthlyInput}
+            onClearInputs={clearInputs}
+          />
 
-        <VariableGuide />
+          <VariableGuide />
 
-        <FullWidthChart chartData={chartData} hasAnyInput={hasAnyInput} />
+          <FullWidthChart chartData={chartData} hasAnyInput={hasAnyInput} />
 
-        <ReportPanel report={report} onCopy={copyReport} onExport={exportExcel} />
+          <ReportPanel report={report} onCopy={copyReport} onExport={exportExcel} />
 
-        <ReferencePanel />
+          <ReferencePanel />
+          </main>
+        </div>
 
-      </main>
-    </div>
+        {notifications.map((notification) => (
+          <Toast
+            key={notification.id}
+            open
+            duration={Infinity}
+            // style={
+            //   {
+            //     "--toast-duration": `${NOTIFICATION_DURATION}ms`,
+            //   } as CSSProperties
+            // }
+            onOpenChange={(open) => {
+              if (!open) {
+                dismissNotification(notification.id);
+              }
+            }}
+          >
+            <ToastTitle>{notification.message}</ToastTitle>
+            <ToastClose aria-label="Fechar notificação">×</ToastClose>
+            <ToastProgress />
+          </Toast>
+        ))}
+        <ToastViewport />
+      </ToastProvider>
+    </TooltipProvider>
   );
 }
 
@@ -970,15 +1062,57 @@ function CalculationTable({
         <table>
           <thead>
             <tr>
-              <th title="Mês de referência do cálculo">Mês</th>
-              <th className="input-column" title="P: precipitação mensal acumulada em milímetros">P (mm)</th>
-              <th className="input-column" title="T: temperatura média mensal em graus Celsius">T (C)</th>
-              <th className="output-column" title="FC: fator de correção mensal por hemisfério e latitude">Fator</th>
-              <th className="output-column" title="i: índice calorimétrico mensal calculado por (T / 5)^1,514">i</th>
-              <th className="output-column" title="ETP: evapotranspiração potencial mensal antes da correção">ETP</th>
-              <th className="output-column" title="ETP corrigida: ETP multiplicada pelo fator de correção mensal">ETP corr.</th>
-              <th className="output-column" title="SH: superávit hídrico, valores positivos do balanço hídrico">SH</th>
-              <th className="output-column" title="DH: déficit hídrico, valores negativos do balanço hídrico">DH</th>
+              <CalculationTableHeader description="Mês de referência do cálculo.">
+                Mês
+              </CalculationTableHeader>
+              <CalculationTableHeader
+                className="input-column"
+                description="P: precipitação mensal acumulada em milímetros."
+              >
+                P (mm)
+              </CalculationTableHeader>
+              <CalculationTableHeader
+                className="input-column"
+                description="T: temperatura média mensal em graus Celsius."
+              >
+                T (C)
+              </CalculationTableHeader>
+              <CalculationTableHeader
+                className="output-column"
+                description="FC: fator de correção mensal por hemisfério e latitude."
+              >
+                Fator
+              </CalculationTableHeader>
+              <CalculationTableHeader
+                className="output-column"
+                description="i: índice calorimétrico mensal calculado por (T / 5)^1,514."
+              >
+                i
+              </CalculationTableHeader>
+              <CalculationTableHeader
+                className="output-column"
+                description="ETP: evapotranspiração potencial mensal antes da correção."
+              >
+                ETP
+              </CalculationTableHeader>
+              <CalculationTableHeader
+                className="output-column"
+                description="ETP corrigida: ETP multiplicada pelo fator de correção mensal."
+              >
+                ETP corr.
+              </CalculationTableHeader>
+              <CalculationTableHeader
+                className="output-column"
+                description="SH: superávit hídrico, valores positivos do balanço hídrico."
+              >
+                SH
+              </CalculationTableHeader>
+              <CalculationTableHeader
+                className="output-column"
+                description="DH: déficit hídrico, valores negativos do balanço hídrico."
+              >
+                DH
+              </CalculationTableHeader>
             </tr>
           </thead>
           <tbody>
@@ -1028,6 +1162,29 @@ function CalculationTable({
   );
 }
 
+function CalculationTableHeader({
+  children,
+  className,
+  description,
+}: {
+  children: ReactNode;
+  className?: string;
+  description: string;
+}) {
+  return (
+    <th className={className}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="table-header-tooltip-trigger" tabIndex={0}>
+            {children}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{description}</TooltipContent>
+      </Tooltip>
+    </th>
+  );
+}
+
 function FullWidthChart({
   chartData,
   hasAnyInput,
@@ -1054,7 +1211,7 @@ function FullWidthChart({
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip
+              <ChartTooltip
                 formatter={(value) => `${formatNumber(Number(value), 1)} mm`}
                 labelFormatter={(label) => `Mês: ${label}`}
               />
