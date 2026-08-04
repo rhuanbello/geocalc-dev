@@ -759,13 +759,40 @@ textarea:focus {
   flex: 0 0 auto;
 }
 
-.source-toggle span {
+.source-toggle button > span {
   display: grid;
   gap: 2px;
   min-width: 0;
   font-size: 0.86rem;
   font-weight: 900;
   line-height: 1.15;
+}
+
+.source-toggle .source-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.source-toggle .source-recommended {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  color: #087a58;
+  background: #ccefe0;
+  font-size: 0.61rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.source-toggle .source-recommended svg {
+  width: 11px;
+  height: 11px;
+  color: currentColor;
 }
 
 .source-toggle small {
@@ -916,6 +943,7 @@ textarea:focus {
 .inmet-station-marker {
   display: grid;
   place-items: center;
+  align-content: center;
   border-radius: 999px;
   background: rgb(26 59 41 / 0.2);
 }

@@ -40,3 +40,6 @@ Thumbs.db
 # Codex/local agent state
 .agents/
 .codex/
+
+# User specified
+Notes/

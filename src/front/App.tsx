@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BadgeCheck,
   BookOpen,
   Calculator,
   Clipboard,
@@ -185,7 +186,7 @@ export function App() {
   );
   const [sourceState, setSourceState] = useState<SourceState>("manual");
   const [climateDataSource, setClimateDataSource] =
-    useState<ClimateDataSource>("open-meteo");
+    useState<ClimateDataSource>("inmet");
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
   const [selectedLocation, setSelectedLocation] =
     useState<LocationSearchResult | null>(null);
@@ -780,25 +781,31 @@ function ClimatePanel({
         <div className="climate-controls">
           <div className="source-toggle" aria-label="Fonte dos dados climáticos">
             <button
+                type="button"
+                className={isInmetSource ? "active" : ""}
+                onClick={() => onClimateDataSourceChange("inmet")}
+            >
+              <Database />
+              <span className="source-title">
+                INMET 1991-2020
+                  <span className="source-recommended">
+                    <BadgeCheck aria-hidden="true"/>
+                    Recomendado
+                  </span>
+                <small>Normal por estação</small>
+              </span>
+            </button>
+            <button
               type="button"
               className={climateDataSource === "open-meteo" ? "active" : ""}
               onClick={() => onClimateDataSourceChange("open-meteo")}
             >
               <CloudSun />
               <span>
-                Open-Meteo/ERA5
+                <span className="source-title">
+                  Open-Meteo/ERA5
+                </span>
                 <small>Estimativa por coordenada</small>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={isInmetSource ? "active" : ""}
-              onClick={() => onClimateDataSourceChange("inmet")}
-            >
-              <Database />
-              <span>
-                INMET 1991-2020
-                <small>Normal por estação</small>
               </span>
             </button>
           </div>

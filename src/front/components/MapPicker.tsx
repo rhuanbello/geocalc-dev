@@ -24,7 +24,7 @@ const markerIcon = L.icon({
   iconUrl: markerIconUrl,
   shadowUrl: markerShadowUrl,
   iconSize: [25, 41],
-  iconAnchor: [12, 41],
+  iconAnchor: [13, 50],
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
