@@ -968,6 +968,17 @@ textarea:focus {
   background: var(--brand-dark);
 }
 
+.inmet-station-marker.is-preview {
+  background: rgb(110 193 228 / 0.38);
+}
+
+.inmet-station-marker.is-preview span {
+  width: 16px;
+  height: 16px;
+  background: var(--brand-green);
+  box-shadow: 0 0 0 5px rgb(110 193 228 / 0.18);
+}
+
 .period-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

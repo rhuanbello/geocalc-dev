@@ -16,6 +16,7 @@ type MapPickerProps = {
   onPointChange: (point: MapPoint) => void;
   stations?: InmetNormalStation[];
   selectedStationCode?: string | null;
+  previewStation?: InmetNormalStation | null;
   onStationSelect?: (station: InmetNormalStation) => void;
 };
 
@@ -43,11 +44,19 @@ const selectedStationIcon = L.divIcon({
   iconAnchor: [14, 14],
 });
 
+const previewStationIcon = L.divIcon({
+  className: "inmet-station-marker is-preview",
+  html: '<span></span>',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
 export function MapPicker({
   point,
   onPointChange,
   stations = [],
   selectedStationCode,
+  previewStation,
   onStationSelect,
 }: MapPickerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -100,7 +109,13 @@ export function MapPicker({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !point) {
+    if (!map) {
+      return;
+    }
+
+    if (!point) {
+      markerRef.current?.remove();
+      markerRef.current = null;
       return;
     }
 
@@ -116,6 +131,19 @@ export function MapPicker({
 
   useEffect(() => {
     const map = mapRef.current;
+    if (!map || !previewStation) {
+      return;
+    }
+
+    map.setView(
+      [previewStation.latitude, previewStation.longitude],
+      Math.max(map.getZoom(), 7),
+      { animate: true },
+    );
+  }, [previewStation]);
+
+  useEffect(() => {
+    const map = mapRef.current;
     const layer = stationLayerRef.current;
     if (!map || !layer) {
       return;
@@ -126,9 +154,11 @@ export function MapPicker({
       const marker = L.marker([station.latitude, station.longitude], {
         bubblingMouseEvents: false,
         icon:
-          station.code === selectedStationCode
-            ? selectedStationIcon
-            : stationIcon,
+          station.code === previewStation?.code
+            ? previewStationIcon
+            : station.code === selectedStationCode
+              ? selectedStationIcon
+              : stationIcon,
         keyboard: true,
         title: `${station.code} - ${station.name}, ${station.uf}`,
       });
@@ -141,7 +171,7 @@ export function MapPicker({
       });
       marker.addTo(layer);
     });
-  }, [stations, selectedStationCode]);
+  }, [stations, selectedStationCode, previewStation]);
 
   return (
     <div className="map-frame">

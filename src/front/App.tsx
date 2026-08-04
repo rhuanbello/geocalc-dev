@@ -192,6 +192,8 @@ export function App() {
     useState<LocationSearchResult | null>(null);
   const [selectedInmetStationCode, setSelectedInmetStationCode] =
     useState<string | null>(null);
+  const [previewedInmetStation, setPreviewedInmetStation] =
+    useState<InmetNormalStation | null>(null);
   const [factorSelection, setFactorSelection] = useState<FactorSelection>({
     hemisphere: "south",
     latitude: 30,
@@ -316,6 +318,7 @@ export function App() {
     setSelectedPoint(null);
     setSelectedLocation(null);
     setSelectedInmetStationCode(null);
+    setPreviewedInmetStation(null);
     setStatusMessage("Local removido. Busque uma cidade ou selecione um ponto no mapa.");
   };
 
@@ -378,6 +381,7 @@ export function App() {
 
   const updateClimateDataSource = (dataSource: ClimateDataSource) => {
     setClimateDataSource(dataSource);
+    setPreviewedInmetStation(null);
     setErrorMessage(null);
     setMissingMonths([]);
 
@@ -405,6 +409,7 @@ export function App() {
   const selectInmetStation = (station: InmetNormalStation | null) => {
     setErrorMessage(null);
     setMissingMonths([]);
+    setPreviewedInmetStation(null);
 
     if (!station) {
       setSelectedInmetStationCode(null);
@@ -554,6 +559,7 @@ export function App() {
             selectedPoint={selectedPoint}
             climateDataSource={climateDataSource}
             selectedInmetStation={selectedInmetStation}
+            previewedInmetStation={previewedInmetStation}
             factorSelection={factorSelection}
             startYear={startYear}
             endYear={endYear}
@@ -570,6 +576,7 @@ export function App() {
             onPointChange={updatePoint}
             onMapPointChange={(point) => void updatePointFromMap(point)}
             onInmetStationChange={selectInmetStation}
+            onInmetStationPreviewChange={setPreviewedInmetStation}
             onLocationClear={clearLocation}
             onLocationSearchError={setErrorMessage}
             onFactorSelectionChange={setFactorSelection}
@@ -715,6 +722,7 @@ function ClimatePanel({
   selectedPoint,
   climateDataSource,
   selectedInmetStation,
+  previewedInmetStation,
   factorSelection,
   startYear,
   endYear,
@@ -731,6 +739,7 @@ function ClimatePanel({
   onPointChange,
   onMapPointChange,
   onInmetStationChange,
+  onInmetStationPreviewChange,
   onLocationClear,
   onLocationSearchError,
   onFactorSelectionChange,
@@ -743,6 +752,7 @@ function ClimatePanel({
   selectedPoint: MapPoint | null;
   climateDataSource: ClimateDataSource;
   selectedInmetStation: InmetNormalStation | null;
+  previewedInmetStation: InmetNormalStation | null;
   factorSelection: FactorSelection;
   startYear: number;
   endYear: number;
@@ -759,6 +769,7 @@ function ClimatePanel({
   onPointChange: (point: MapPoint, location: LocationSearchResult | null) => void;
   onMapPointChange: (point: MapPoint) => void;
   onInmetStationChange: (station: InmetNormalStation | null) => void;
+  onInmetStationPreviewChange: (station: InmetNormalStation | null) => void;
   onLocationClear: () => void;
   onLocationSearchError: (message: string | null) => void;
   onFactorSelectionChange: (selection: FactorSelection) => void;
@@ -814,6 +825,7 @@ function ClimatePanel({
             <InmetStationCombobox
               value={selectedInmetStation}
               onChange={onInmetStationChange}
+              onPreviewChange={onInmetStationPreviewChange}
             />
           ) : (
             <LocationCombobox
@@ -1014,6 +1026,7 @@ function ClimatePanel({
           onPointChange={isInmetSource ? () => undefined : onMapPointChange}
           stations={isInmetSource ? INMET_STATIONS : []}
           selectedStationCode={selectedInmetStation?.code ?? null}
+          previewStation={previewedInmetStation}
           onStationSelect={onInmetStationChange}
         />
       </div>

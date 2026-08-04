@@ -25,11 +25,13 @@ import {
 type InmetStationComboboxProps = {
   value: InmetNormalStation | null;
   onChange: (station: InmetNormalStation | null) => void;
+  onPreviewChange: (station: InmetNormalStation | null) => void;
 };
 
 export function InmetStationCombobox({
   value,
   onChange,
+  onPreviewChange,
 }: InmetStationComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -39,7 +41,16 @@ export function InmetStationCombobox({
   return (
     <div className="location-combobox">
       <Label htmlFor="inmet-station-combobox">Estação INMET</Label>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(nextOpen) => {
+          setOpen(nextOpen);
+
+          if (!nextOpen) {
+            onPreviewChange(null);
+          }
+        }}
+      >
         <PopoverTrigger asChild>
           <Button
             id="inmet-station-combobox"
@@ -60,6 +71,7 @@ export function InmetStationCombobox({
                   onClick={(event) => {
                     event.stopPropagation();
                     onChange(null);
+                    onPreviewChange(null);
                     setQuery("");
                   }}
                 />
@@ -72,10 +84,13 @@ export function InmetStationCombobox({
           <Command shouldFilter={false}>
             <CommandInput
               value={query}
-              onValueChange={setQuery}
+              onValueChange={(value) => {
+                setQuery(value);
+                onPreviewChange(null);
+              }}
               placeholder="Ex.: Brasília, DF ou 83377"
             />
-            <CommandList>
+            <CommandList onMouseLeave={() => onPreviewChange(null)}>
               {options.length > 0 ? (
                 <CommandGroup>
                   {options.map((station) => {
@@ -85,8 +100,11 @@ export function InmetStationCombobox({
                       <CommandItem
                         key={station.code}
                         value={station.code}
+                        onFocus={() => onPreviewChange(station)}
+                        onMouseEnter={() => onPreviewChange(station)}
                         onSelect={() => {
                           onChange(station);
+                          onPreviewChange(null);
                           setOpen(false);
                           setQuery("");
                         }}
