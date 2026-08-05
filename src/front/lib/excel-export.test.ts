@@ -138,4 +138,31 @@ describe("Excel export", () => {
     expect(mainSheet?.getCell("B45").value).toContain("Normais Climatológicas");
     expect(mainSheet?.getCell("B45").value).not.toContain("série diária");
   });
+
+  test("identifies the selected INMET normal period in the export", () => {
+    const station = getInmetStationByCode("82989", "1981-2010");
+    if (!station) {
+      throw new Error("Station not found");
+    }
+
+    const result = calculateWaterBalance(inmetStationToMonthlyInputs(station), {
+      hemisphere: "south",
+      latitude: 10,
+    });
+    const workbook = createWaterBalanceWorkbook({
+      result,
+      location: null,
+      point: { latitude: station.latitude, longitude: station.longitude },
+      startYear: 1981,
+      endYear: 2010,
+      effectiveEndDate: "2010-12-31",
+      sourceState: "inmet",
+      selectedInmetStation: station,
+      inmetPeriod: "1981-2010",
+    });
+
+    const mainSheet = workbook.getWorksheet("Balanço hídrico");
+    expect(mainSheet?.getCell("C6").value).toBe("1981-2010");
+    expect(mainSheet?.getCell("B45").value).toContain("1981-2010");
+  });
 });

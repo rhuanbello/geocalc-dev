@@ -8,42 +8,46 @@ import type {
 } from "../src/shared/inmet-validation";
 
 const ROOT_DIR = process.cwd();
-const PERIOD = "1991-2020";
+const PERIOD = "1981-2010";
 const INMET_DIR = path.join(
   ROOT_DIR,
-  "docs/semana 02/Dados INMET/1991 - 2020",
+  "Notes/Dados INMET/1981 - 2010",
 );
 const OUTPUT_DIR = path.join(ROOT_DIR, "src/shared/data");
-const OUTPUT_FILE = path.join(OUTPUT_DIR, "inmet-normals-1991-2020.json");
+const OUTPUT_FILE = path.join(OUTPUT_DIR, "inmet-normals-1981-2010.json");
 
 async function main() {
   const [stations, precipitationRecords, temperatureRecords] = await Promise.all([
-    readStations("Normal-Climatologica-ESTAÇÕES.xlsx"),
-    readMonthlyRecords("Normal-Climatologica-PREC.xlsx"),
-    readMonthlyRecords("Normal-Climatologica-TMEDSECA.xlsx"),
+    readStations("Estações-Normal-Climatoógica-1981-2010.xlsx"),
+    readMonthlyRecords("30-Precipitação-Acumulada-NCB_1981-2010.xlsx"),
+    readMonthlyRecords("01-Temperatura-Média-Compensada-Bulbo-Seco-NCB_1981-2010.xlsx"),
   ]);
   const dataset = buildInmetValidationDataset({
     stations,
     precipitationRecords,
     temperatureRecords,
   });
+  console.log(path.join(INMET_DIR));
+
   const generatedAt = new Date().toISOString();
   const payload = {
     source: "INMET Normais Climatológicas do Brasil",
     period: PERIOD,
     generatedAt,
     stationCount: dataset.validStations.length,
-    stations: dataset.validStations.map(({ station, precipitation, temperature }) => ({
-      code: station.code,
-      name: station.name,
-      uf: station.uf,
-      latitude: station.latitude,
-      longitude: station.longitude,
-      altitude: station.altitude,
-      status: station.status,
-      precipitation: precipitation.monthly,
-      temperature: temperature.monthly,
-    })),
+    stations: dataset.validStations
+      .map(({ station, precipitation, temperature }) => ({
+        code: station.code,
+        name: station.name,
+        uf: station.uf,
+        latitude: station.latitude,
+        longitude: station.longitude,
+        altitude: station.altitude,
+        status: station.status,
+        precipitation: precipitation.monthly,
+        temperature: temperature.monthly,
+      }))
+      .sort((left, right) => left.name.localeCompare(right.name, "pt-BR")),
   };
 
   await mkdir(OUTPUT_DIR, { recursive: true });

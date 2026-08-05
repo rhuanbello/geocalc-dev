@@ -46,7 +46,7 @@ export const REFERENCE_SOURCES: ReferenceSource[] = [
   {
     label: "INMET Normais Climatológicas do Brasil",
     description:
-      "Fonte observacional por estação meteorológica usada quando o usuário seleciona uma estação INMET completa para 1991-2020.",
+      "Fonte observacional por estação meteorológica usada quando o usuário seleciona uma estação INMET completa para 1981-2010 ou 1991-2020.",
     href: "https://portal.inmet.gov.br/normais",
   },
   {
@@ -118,7 +118,7 @@ export const CLIMATE_IMPORT_METHODOLOGY: MethodologySection[] = [
   {
     title: "INMET por estação",
     body:
-      "Quando uma estação INMET é selecionada, a tabela recebe diretamente os valores mensais de precipitação e temperatura da normal climatológica 1991-2020 daquela estação.",
+      "Quando uma estação INMET é selecionada, a tabela recebe diretamente os valores mensais de precipitação e temperatura da normal climatológica 1981-2010 ou 1991-2020 escolhida para aquela estação.",
   },
   {
     title: "Precipitação mensal",

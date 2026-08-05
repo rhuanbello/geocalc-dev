@@ -137,7 +137,7 @@ export function MapPicker({
 
     map.setView(
       [previewStation.latitude, previewStation.longitude],
-      Math.max(map.getZoom(), 7),
+      7,
       { animate: true },
     );
   }, [previewStation]);

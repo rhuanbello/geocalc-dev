@@ -26,6 +26,31 @@ describe("INMET normals dataset", () => {
     ).toBe(true);
   });
 
+  test("exposes only complete 1981-2010 stations", () => {
+    const dataset = getInmetNormalsDataset("1981-2010");
+
+    expect(dataset.period).toBe("1981-2010");
+    expect(dataset.stationCount).toBe(297);
+    expect(listInmetStations("1981-2010")).toHaveLength(297);
+    expect(
+      listInmetStations("1981-2010").every(
+        (station) =>
+          station.precipitation.length === 12 &&
+          station.temperature.length === 12 &&
+          station.precipitation.every(Number.isFinite) &&
+          station.temperature.every(Number.isFinite),
+      ),
+    ).toBe(true);
+    expect(getInmetStationByCode("82989", "1981-2010")?.name).toBe(
+      "ÁGUA BRANCA",
+    );
+    expect(
+      searchInmetStations("agua branca", "1981-2010").some(
+        (station) => station.code === "82989",
+      ),
+    ).toBe(true);
+  });
+
   test("finds stations by code, name and UF", () => {
     expect(getInmetStationByCode("83377")?.name).toBe("BRASILIA");
     expect(searchInmetStations("brasilia").some((station) => station.code === "83377")).toBe(true);

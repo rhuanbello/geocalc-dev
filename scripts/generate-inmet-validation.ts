@@ -18,13 +18,13 @@ import {
   type MonthlyInput,
 } from "../src/shared/water-balance";
 
-const PERIOD = "1991-2020";
-const START_DATE = "1991-01-01";
-const END_DATE = "2020-12-31";
+const PERIOD = "1981-2010";
+const START_DATE = "1981-01-01";
+const END_DATE = "2010-12-31";
 const ROOT_DIR = process.cwd();
 const INMET_DIR = path.join(
   ROOT_DIR,
-  "docs/semana 02/Dados INMET/1991 - 2020",
+  "Notes/Dados INMET/1981 - 2010",
 );
 const GENERATED_DIR = path.join(ROOT_DIR, "docs/gerados");
 const MODEL_CONFIGS = {
@@ -45,11 +45,11 @@ const MODEL_LABEL = SELECTED_MODEL.label;
 const MODEL_SLUG = SELECTED_MODEL.slug;
 const CACHE_DIR = path.join(
   GENERATED_DIR,
-  `cache/open-meteo-${MODEL_SLUG}-1991-2020`,
+  `cache/open-meteo-${MODEL_SLUG}-1981-2010`,
 );
 const OUTPUT_FILE = path.join(
   GENERATED_DIR,
-  `validacao-inmet-openmeteo-${MODEL_SLUG}-1991-2020.xlsx`,
+  `validacao-inmet-openmeteo-${MODEL_SLUG}-1981-2010.xlsx`,
 );
 const PARTIAL_MODE = process.argv.includes("--partial");
 
@@ -146,9 +146,9 @@ async function main() {
 
 async function readInmetDataset() {
   const [stations, precipitationRecords, temperatureRecords] = await Promise.all([
-    readStations("Normal-Climatologica-ESTAÇÕES.xlsx"),
-    readMonthlyRecords("Normal-Climatologica-PREC.xlsx"),
-    readMonthlyRecords("Normal-Climatologica-TMEDSECA.xlsx"),
+    readStations("Estações-Normal-Climatoógica-1981-2010.xlsx"),
+    readMonthlyRecords("30-Precipitação-Acumulada-NCB_1981-2010.xlsx"),
+    readMonthlyRecords("01-Temperatura-Média-Compensada-Bulbo-Seco-NCB_1981-2010.xlsx"),
   ]);
 
   return buildInmetValidationDataset({
@@ -249,7 +249,7 @@ async function fetchEra5InputsByStation(stations: InmetValidStation[]): Promise<
     try {
       const batchInputs = await fetchEra5Batch(stationsChunk);
       batchInputs.forEach((inputs, code) => inputsByCode.set(code, inputs));
-      await sleep(20000);
+      await sleep(100);
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       stationsChunk.forEach((station) => {

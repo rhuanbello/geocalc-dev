@@ -7,7 +7,11 @@ import type {
 } from "$/water-balance";
 import { formatIsoDatePtBr } from "$/date-format";
 import { REFERENCE_SOURCES } from "$/academic";
-import { inmetStationLabel, type InmetNormalStation } from "$/inmet-normals";
+import {
+  inmetStationLabel,
+  type InmetNormalPeriod,
+  type InmetNormalStation,
+} from "$/inmet-normals";
 
 type ExportSourceState = "manual" | "open-meteo" | "inmet";
 
@@ -20,6 +24,7 @@ export type WaterBalanceWorkbookParams = {
   effectiveEndDate: string;
   sourceState: ExportSourceState;
   selectedInmetStation?: InmetNormalStation | null;
+  inmetPeriod?: InmetNormalPeriod | null;
   climateModel?: string;
 };
 
@@ -209,7 +214,7 @@ function buildMainSheet(
     params.sourceState === "inmet"
       ? [
           "INMET",
-          "Dados mensais provenientes das Normais Climatológicas do Brasil 1991-2020 para a estação selecionada. A tabela continua editável após o preenchimento.",
+          `Dados mensais provenientes das Normais Climatológicas do Brasil ${params.inmetPeriod ?? "1991-2020"} para a estação selecionada. A tabela continua editável após o preenchimento.`,
         ]
       : [
           "Open-Meteo",

@@ -1,0 +1,72 @@
+{
+  "code": "82024",
+  "model": "era5",
+  "period": "1981-2010",
+  "latitude": 2.82944443,
+  "longitude": -60.66194444,
+  "inputs": [
+    {
+      "precipitation": 39.3,
+      "temperature": 27.7836559139785
+    },
+    {
+      "precipitation": 32.11666666666665,
+      "temperature": 28.147274220032845
+    },
+    {
+      "precipitation": 62.54999999999999,
+      "temperature": 28.460107526881718
+    },
+    {
+      "precipitation": 200.10333333333335,
+      "temperature": 27.457111111111114
+    },
+    {
+      "precipitation": 335.4066666666667,
+      "temperature": 26.128064516129037
+    },
+    {
+      "precipitation": 296.97999999999996,
+      "temperature": 25.545222222222222
+    },
+    {
+      "precipitation": 236.66999999999996,
+      "temperature": 25.413333333333338
+    },
+    {
+      "precipitation": 154.34666666666664,
+      "temperature": 26.119784946236564
+    },
+    {
+      "precipitation": 97.74999999999999,
+      "temperature": 27.079333333333338
+    },
+    {
+      "precipitation": 78.30333333333333,
+      "temperature": 27.74827956989247
+    },
+    {
+      "precipitation": 89.23666666666668,
+      "temperature": 27.67900000000001
+    },
+    {
+      "precipitation": 59.03666666666666,
+      "temperature": 27.65881720430108
+    }
+  ],
+  "yearsWithData": [
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "generatedAt": "2026-08-04T17:18:02.053Z"
+}

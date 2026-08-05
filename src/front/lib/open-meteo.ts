@@ -73,6 +73,7 @@ export async function searchLocations(
     count: "6",
     language: "pt",
     format: "json",
+    countryCode: "BR"
   });
   const response = await fetch(
     `https://geocoding-api.open-meteo.com/v1/search?${params.toString()}`,

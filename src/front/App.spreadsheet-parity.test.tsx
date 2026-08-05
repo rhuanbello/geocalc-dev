@@ -321,6 +321,28 @@ describe("App spreadsheet parity", () => {
     expect(report.value).not.toContain("Open-Meteo Historical Weather API");
   });
 
+  test("seleciona INMET 1981-2010 por estação e preenche a tabela", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByText("INMET 1981-2010"));
+    await user.click(screen.getByText("Selecionar estação INMET no mapa"));
+
+    await waitFor(() => {
+      expect((
+        screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement
+      ).value).toBe("39,7");
+    });
+
+    const report = screen.getByDisplayValue(
+      /Síntese dos resultados/,
+    ) as HTMLTextAreaElement;
+    expect(report.value).toContain(
+      "Fonte dos dados: INMET Normais Climatológicas do Brasil 1981-2010",
+    );
+    expect(report.value).toContain("Estação INMET: 82989 - ÁGUA BRANCA, AL");
+  });
+
   test("simplifica a sidebar", () => {
     render(<App />);
 

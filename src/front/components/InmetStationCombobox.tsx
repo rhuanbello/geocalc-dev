@@ -19,23 +19,26 @@ import { cn } from "@/shadcn/lib/utils/utils";
 import {
   inmetStationLabel,
   searchInmetStations,
+  type InmetNormalPeriod,
   type InmetNormalStation,
 } from "$/inmet-normals";
 
 type InmetStationComboboxProps = {
+  period: InmetNormalPeriod;
   value: InmetNormalStation | null;
   onChange: (station: InmetNormalStation | null) => void;
   onPreviewChange: (station: InmetNormalStation | null) => void;
 };
 
 export function InmetStationCombobox({
+  period,
   value,
   onChange,
   onPreviewChange,
 }: InmetStationComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const options = useMemo(() => searchInmetStations(query), [query]);
+  const options = useMemo(() => searchInmetStations(query, period), [query, period]);
   const hasSelection = Boolean(value);
 
   return (

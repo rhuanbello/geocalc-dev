@@ -77,8 +77,10 @@ import {
   getInmetStationByCode,
   inmetStationLabel,
   inmetStationToMonthlyInputs,
+  isInmetNormalPeriod,
   listInmetStations,
   type ClimateDataSource,
+  type InmetNormalPeriod,
   type InmetNormalStation,
 } from "$/inmet-normals";
 
@@ -92,10 +94,8 @@ type MonthlyTextInput = {
 const CURRENT_YEAR = new Date().getFullYear();
 const DEFAULT_START_YEAR = 1991;
 const DEFAULT_END_YEAR = 2020;
-const INMET_PERIOD = "1991-2020";
 const NOTIFICATION_DURATION = 4000;
 const CLIMATE_PERIOD_PRESETS = getClimatePeriodPresets();
-const INMET_STATIONS = listInmetStations();
 const EMPTY_MONTHLY_TEXT_INPUTS: MonthlyTextInput[] = MONTHS.map(() => ({
   precipitation: "",
   temperature: "",
@@ -104,6 +104,11 @@ const HEMISPHERE_OPTIONS: Array<{ value: Hemisphere; label: string }> = [
   { value: "south", label: "Sul" },
   { value: "north", label: "Norte" },
 ];
+
+function inmetPeriodYears(period: InmetNormalPeriod): [number, number] {
+  const [startYear, endYear] = period.split("-").map(Number);
+  return [startYear, endYear];
+}
 
 function formatNumber(value: number | null | undefined, digits = 1): string {
   if (value === null || value === undefined || !Number.isFinite(value)) {
@@ -186,7 +191,7 @@ export function App() {
   );
   const [sourceState, setSourceState] = useState<SourceState>("manual");
   const [climateDataSource, setClimateDataSource] =
-    useState<ClimateDataSource>("inmet");
+    useState<ClimateDataSource>("1991-2020");
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
   const [selectedLocation, setSelectedLocation] =
     useState<LocationSearchResult | null>(null);
@@ -223,9 +228,15 @@ export function App() {
     [monthlyTextInputs],
   );
   const selectedInmetStation = useMemo(
-    () => getInmetStationByCode(selectedInmetStationCode),
-    [selectedInmetStationCode],
+    () =>
+      isInmetNormalPeriod(climateDataSource)
+        ? getInmetStationByCode(selectedInmetStationCode, climateDataSource)
+        : null,
+    [climateDataSource, selectedInmetStationCode],
   );
+  const selectedInmetPeriod = isInmetNormalPeriod(climateDataSource)
+    ? climateDataSource
+    : null;
   const effectiveEndDate = useMemo(() => getEffectiveEndDate(endYear), [endYear]);
   const waterBalance = useMemo(
     () => calculateWaterBalance(monthlyInputs, factorSelection),
@@ -242,6 +253,7 @@ export function App() {
         effectiveEndDate,
         sourceState,
         selectedInmetStation,
+        selectedInmetPeriod,
         climateModel: CLIMATE_MODEL_LABEL,
       }),
     [
@@ -253,6 +265,7 @@ export function App() {
       effectiveEndDate,
       sourceState,
       selectedInmetStation,
+      selectedInmetPeriod,
     ],
   );
   const chartData = waterBalance.rows.map((row) => ({
@@ -283,7 +296,7 @@ export function App() {
   };
 
   const updatePointFromMap = async (point: MapPoint) => {
-    if (climateDataSource === "inmet") {
+    if (isInmetNormalPeriod(climateDataSource)) {
       return;
     }
 
@@ -385,15 +398,16 @@ export function App() {
     setErrorMessage(null);
     setMissingMonths([]);
 
-    if (dataSource === "inmet") {
+    if (isInmetNormalPeriod(dataSource)) {
+      const [startYear, endYear] = inmetPeriodYears(dataSource);
       setSelectedInmetStationCode(null);
       setSelectedPoint(null);
       setSelectedLocation(null);
       setMonthlyTextInputs(EMPTY_MONTHLY_TEXT_INPUTS);
       setSourceState("manual");
-      setPeriodPreset("1991-2020");
-      setStartYear(DEFAULT_START_YEAR);
-      setEndYear(DEFAULT_END_YEAR);
+      setPeriodPreset(dataSource);
+      setStartYear(startYear);
+      setEndYear(endYear);
       setStatusMessage("Selecione uma estação INMET no mapa ou na busca.");
       return;
     }
@@ -421,7 +435,10 @@ export function App() {
       return;
     }
 
-    setClimateDataSource("inmet");
+    const inmetPeriod = isInmetNormalPeriod(climateDataSource)
+      ? climateDataSource
+      : "1991-2020";
+    const [startYear, endYear] = inmetPeriodYears(inmetPeriod);
     setSelectedInmetStationCode(station.code);
     setSelectedPoint({
       latitude: station.latitude,
@@ -437,9 +454,9 @@ export function App() {
       timezone: "auto",
     });
     setFactorSelection(nearestFactorSelection(station.latitude));
-    setPeriodPreset("1991-2020");
-    setStartYear(DEFAULT_START_YEAR);
-    setEndYear(DEFAULT_END_YEAR);
+    setPeriodPreset(inmetPeriod);
+    setStartYear(startYear);
+    setEndYear(endYear);
     setMonthlyTextInputs(
       inmetStationToMonthlyInputs(station).map((input) => ({
         precipitation: formatInputNumber(input.precipitation),
@@ -448,7 +465,7 @@ export function App() {
     );
     setSourceState("inmet");
     setStatusMessage(
-      `Dados INMET ${INMET_PERIOD} carregados para ${inmetStationLabel(station)}.`,
+      `Dados INMET ${inmetPeriod} carregados para ${inmetStationLabel(station)}.`,
     );
   };
 
@@ -535,6 +552,7 @@ export function App() {
       effectiveEndDate,
       sourceState,
       selectedInmetStation,
+      inmetPeriod: selectedInmetPeriod,
       climateModel: CLIMATE_MODEL_LABEL,
     });
     setStatusMessage("Planilha Excel exportada.");
@@ -559,6 +577,7 @@ export function App() {
             selectedPoint={selectedPoint}
             climateDataSource={climateDataSource}
             selectedInmetStation={selectedInmetStation}
+            selectedInmetPeriod={selectedInmetPeriod}
             previewedInmetStation={previewedInmetStation}
             factorSelection={factorSelection}
             startYear={startYear}
@@ -722,6 +741,7 @@ function ClimatePanel({
   selectedPoint,
   climateDataSource,
   selectedInmetStation,
+  selectedInmetPeriod,
   previewedInmetStation,
   factorSelection,
   startYear,
@@ -752,6 +772,7 @@ function ClimatePanel({
   selectedPoint: MapPoint | null;
   climateDataSource: ClimateDataSource;
   selectedInmetStation: InmetNormalStation | null;
+  selectedInmetPeriod: InmetNormalPeriod | null;
   previewedInmetStation: InmetNormalStation | null;
   factorSelection: FactorSelection;
   startYear: number;
@@ -778,7 +799,7 @@ function ClimatePanel({
   onEndYearChange: (value: number) => void;
   onImportClimate: () => void;
 }) {
-  const isInmetSource = climateDataSource === "inmet";
+  const isInmetSource = isInmetNormalPeriod(climateDataSource);
 
   return (
     <section className="panel climate-panel">
@@ -792,17 +813,28 @@ function ClimatePanel({
         <div className="climate-controls">
           <div className="source-toggle" aria-label="Fonte dos dados climáticos">
             <button
-                type="button"
-                className={isInmetSource ? "active" : ""}
-                onClick={() => onClimateDataSourceChange("inmet")}
+              type="button"
+              className={climateDataSource === "1991-2020" ? "active" : ""}
+              onClick={() => onClimateDataSourceChange("1991-2020")}
             >
               <Database />
               <span className="source-title">
                 INMET 1991-2020
-                  <span className="source-recommended">
-                    <BadgeCheck aria-hidden="true"/>
-                    Recomendado
-                  </span>
+                <span className="source-recommended">
+                  <BadgeCheck aria-hidden="true" />
+                  Recomendado
+                </span>
+                <small>Normal por estação</small>
+              </span>
+            </button>
+            <button
+              type="button"
+              className={climateDataSource === "1981-2010" ? "active" : ""}
+              onClick={() => onClimateDataSourceChange("1981-2010")}
+            >
+              <Database />
+              <span>
+                <span className="source-title">INMET 1981-2010</span>
                 <small>Normal por estação</small>
               </span>
             </button>
@@ -823,6 +855,7 @@ function ClimatePanel({
 
           {isInmetSource ? (
             <InmetStationCombobox
+              period={selectedInmetPeriod ?? "1991-2020"}
               value={selectedInmetStation}
               onChange={onInmetStationChange}
               onPreviewChange={onInmetStationPreviewChange}
@@ -890,7 +923,7 @@ function ClimatePanel({
           {isInmetSource ? (
             <div className="inmet-period-card">
               <span>Período de referência</span>
-              <strong>{INMET_PERIOD}</strong>
+              <strong>{selectedInmetPeriod}</strong>
               <small>Normal climatológica oficial disponível para as estações exibidas.</small>
             </div>
           ) : (
@@ -947,7 +980,7 @@ function ClimatePanel({
                 <span>
                   Ao selecionar uma estação INMET completa, a tabela recebe
                   automaticamente a precipitação e a temperatura mensal da normal
-                  climatológica {INMET_PERIOD}.
+                  climatológica {selectedInmetPeriod}.
                 </span>
               </div>
             </div>
@@ -1024,7 +1057,11 @@ function ClimatePanel({
         <MapPicker
           point={selectedPoint}
           onPointChange={isInmetSource ? () => undefined : onMapPointChange}
-          stations={isInmetSource ? INMET_STATIONS : []}
+          stations={
+            isInmetSource
+              ? listInmetStations(selectedInmetPeriod ?? "1991-2020")
+              : []
+          }
           selectedStationCode={selectedInmetStation?.code ?? null}
           previewStation={previewedInmetStation}
           onStationSelect={onInmetStationChange}
@@ -1389,6 +1426,7 @@ function buildReport(params: {
   effectiveEndDate: string;
   sourceState: SourceState;
   selectedInmetStation: InmetNormalStation | null;
+  selectedInmetPeriod: InmetNormalPeriod | null;
   climateModel: string;
 }): string {
   const {
@@ -1400,6 +1438,7 @@ function buildReport(params: {
     effectiveEndDate,
     sourceState,
     selectedInmetStation,
+    selectedInmetPeriod,
     climateModel,
   } = params;
   const deficit = result.annual.maxDeficit;
@@ -1413,7 +1452,7 @@ function buildReport(params: {
   const sourceLines =
     sourceState === "inmet" && selectedInmetStation
       ? [
-          `Fonte dos dados: INMET Normais Climatológicas do Brasil ${INMET_PERIOD}`,
+          `Fonte dos dados: INMET Normais Climatológicas do Brasil ${selectedInmetPeriod}`,
           `Estação INMET: ${inmetStationLabel(selectedInmetStation)}`,
         ]
       : sourceState === "open-meteo"
