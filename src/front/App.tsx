@@ -83,6 +83,8 @@ import {
   type InmetNormalPeriod,
   type InmetNormalStation,
 } from "$/inmet-normals";
+import "katex/dist/katex.min.css";
+import {Formula} from "@/components/Formula";
 
 type SourceState = "manual" | "open-meteo" | "inmet";
 
@@ -679,11 +681,7 @@ function ModuleHeader() {
     <header className="module-header" id="balanco-hidrico">
       <div>
         <p className="eyebrow">Módulo ativo</p>
-        <h1>Balanço hídrico</h1>
-        <p>
-          Selecione um local, preencha dados climáticos e acompanhe como chuva,
-          temperatura, fator mensal e ETP formam o saldo hídrico.
-        </p>
+        <h1>Balanço Hídrico (BH)</h1>
       </div>
     </header>
   );
@@ -701,11 +699,17 @@ function MethodologyPanel() {
         {WATER_BALANCE_METHODOLOGY.map((section) => (
           <article key={section.title} className="methodology-card">
             <h3>{section.title}</h3>
+            {section.note ? (
+              <p className="methodology-card-note">
+                <strong>Observação</strong>
+                <span>{section.note}</span>
+              </p>
+            ) : null}
             <p>{section.body}</p>
             {section.formulas?.length ? (
               <div className="methodology-card-formulas">
                 {section.formulas.map((formula) => (
-                  <code key={formula}>{formula}</code>
+                  <Formula key={formula} latex={formula} className="formula" />
                 ))}
               </div>
             ) : null}
@@ -819,11 +823,11 @@ function ClimatePanel({
             >
               <Database />
               <span className="source-title">
-                INMET 1991-2020
                 <span className="source-recommended">
-                  <BadgeCheck aria-hidden="true" />
+                  <BadgeCheck aria-hidden="true"/>
                   Recomendado
                 </span>
+                INMET 1991-2020
                 <small>Normal por estação</small>
               </span>
             </button>

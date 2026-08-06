@@ -305,6 +305,37 @@ h1 {
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.55;
+  white-space: pre-line;
+}
+
+.methodology-card .methodology-card-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 7px;
+  margin: -1px 0 10px;
+  padding: 7px 9px;
+  border-left: 3px solid var(--brand-green);
+  border-radius: 0 6px 6px 0;
+  background: rgb(0 155 110 / 0.08);
+  color: var(--brand-dark);
+  font-size: 0.8rem;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.methodology-card .methodology-card-note strong {
+  flex: 0 0 auto;
+  color: var(--brand-green);
+  font-size: 0.72rem;
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.methodology-card .methodology-card-note span {
+  flex: 1 1 12rem;
+  min-width: 0;
 }
 
 .methodology-card-formulas {
@@ -313,18 +344,30 @@ h1 {
   margin-top: 11px;
 }
 
-.methodology-card-formulas code {
+.methodology-card-formulas > .formula {
   display: block;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: auto;
   padding: 8px 9px;
   border: 1px solid rgb(0 155 110 / 0.18);
   border-radius: 7px;
   background: #f1fbf5;
   color: var(--brand-dark);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8rem;
-  font-weight: 800;
   line-height: 1.35;
-  white-space: normal;
+}
+
+.methodology-card-formulas > .formula .katex-display {
+  margin: 0;
+  text-align: left;
+}
+
+.methodology-card-formulas > .formula .katex-display > .katex {
+  min-width: max-content;
+  padding-right: 9px;
+  text-align: left;
+  font-weight: bold;
 }
 
 .climate-method-panel {

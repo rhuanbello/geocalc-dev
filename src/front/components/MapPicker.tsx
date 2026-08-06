@@ -131,16 +131,20 @@ export function MapPicker({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !previewStation) {
+    const focusedStation =
+      previewStation ??
+      stations.find((station) => station.code === selectedStationCode);
+
+    if (!map || !focusedStation) {
       return;
     }
 
     map.setView(
-      [previewStation.latitude, previewStation.longitude],
+      [focusedStation.latitude, focusedStation.longitude],
       7,
       { animate: true },
     );
-  }, [previewStation]);
+  }, [stations, selectedStationCode, previewStation]);
 
   useEffect(() => {
     const map = mapRef.current;

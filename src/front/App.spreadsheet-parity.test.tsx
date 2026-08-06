@@ -136,6 +136,7 @@ describe("App spreadsheet parity", () => {
   test("busca local pelo combobox e seleciona resultado", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await selectOpenMeteo(user);
 
     await user.click(screen.getByRole("combobox", { name: "Buscar local" }));
     await user.type(screen.getByPlaceholderText("Ex.: Niterói, RJ"), "niteroi");
@@ -153,22 +154,36 @@ describe("App spreadsheet parity", () => {
   test("renderiza metodologia, fontes e presets climáticos", async () => {
     const user = userEvent.setup();
     const { container } = render(<App />);
+    await selectOpenMeteo(user);
 
     expect(container.querySelector(".header-metrics")).toBeNull();
     expect(screen.getByText("Conceitos básicos e metodologia")).toBeTruthy();
     expect(screen.getByText("O que é o balanço hídrico")).toBeTruthy();
-    expect(screen.getByText("Entrada e saída de água")).toBeTruthy();
-    expect(screen.getAllByText("BH = P - Etp").length).toBeGreaterThan(0);
-    expect(screen.getByText("Índices de Thornthwaite")).toBeTruthy();
+    expect(screen.getByText("Entrada e saída de água no BH")).toBeTruthy();
+    expect(screen.getByText("Observação")).toBeTruthy();
+    expect(screen.getByText("A temperatura é utilizada para o cálculo da Etp.")).toBeTruthy();
+    expect(screen.getByText("Índices na fórmula de Thornthwaite")).toBeTruthy();
     expect(screen.queryByText("Vazão como aplicação futura")).toBeNull();
     expect(container.querySelector(".methodology-formula-block")).toBeNull();
-    expect(screen.getAllByText("BH = P - Etp corrigida").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("i = (t / 5)^1,514").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/I = soma\(i\)/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/675 \* 10\^-9/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Etp corrigida = Etp * FC").length).toBeGreaterThan(0);
+    const renderedFormulas = Array.from(
+      container.querySelectorAll('annotation[encoding="application/x-tex"]'),
+      (annotation) => annotation.textContent,
+    );
+    expect(renderedFormulas).toEqual(
+      expect.arrayContaining([
+        "BH = P - Etp",
+        "i = (t / 5)^{1,514}",
+        "I = soma(i)",
+        "a = (675 * 10^{-9} * I^3) - (771 * 10^{-7} * I^2) + (0,01792 * I) + 0,49239",
+        "\\text{Etp corrigida} = Etp * FC = P - \\text{Etp corrigida}",
+      ]),
+    );
     expect(screen.getAllByText(/Thornthwaite/).length).toBeGreaterThan(0);
-    expect(screen.getByText("Fontes de dados da obtenção da precipitação e temperatura")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Fontes de dados de precipitação (P) e temperatura (t) para calcular o BH na tabela de cálculo",
+      ),
+    ).toBeTruthy();
     expect(screen.getByText("Precipitação mensal")).toBeTruthy();
     expect(screen.getByText("Temperatura mensal")).toBeTruthy();
     expect(screen.getByText("Normal do período")).toBeTruthy();
@@ -282,6 +297,7 @@ describe("App spreadsheet parity", () => {
   test("exibe coordenada selecionada no mapa no campo de local", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await selectOpenMeteo(user);
 
     await user.click(screen.getByText("Selecionar ponto no mapa"));
 
@@ -394,4 +410,8 @@ async function chooseCombobox(
   await user.click(screen.getByRole("combobox", { name: label }));
   const matches = screen.getAllByText(option);
   await user.click(matches[matches.length - 1]);
+}
+
+async function selectOpenMeteo(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: /Open-Meteo\/ERA5/ }));
 }
