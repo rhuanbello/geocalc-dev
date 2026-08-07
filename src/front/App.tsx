@@ -59,6 +59,7 @@ import {
   MONTHS,
   SUPPORTED_LATITUDES,
   calculateWaterBalance,
+  getMonthlyInputError,
   nearestFactorSelection,
   type FactorSelection,
   type Hemisphere,
@@ -610,6 +611,7 @@ export function App() {
           <CalculationTable
             rows={waterBalance.rows}
             inputs={monthlyTextInputs}
+            monthlyInputs={monthlyInputs}
             hasAnyInput={hasAnyInput}
             onInputChange={updateMonthlyInput}
             onClearInputs={clearInputs}
@@ -816,42 +818,51 @@ function ClimatePanel({
       <div className="climate-grid">
         <div className="climate-controls">
           <div className="source-toggle" aria-label="Fonte dos dados climáticos">
-            <button
-              type="button"
-              className={climateDataSource === "1991-2020" ? "active" : ""}
-              onClick={() => onClimateDataSourceChange("1991-2020")}
-            >
-              <Database />
-              <span className="source-title">
-                <span className="source-recommended">
-                  <BadgeCheck aria-hidden="true"/>
-                  Recomendado
+            <div className={`source-group ${isInmetSource ? "active" : ""}`}>
+              <div className="source-group-heading">
+                <Database aria-hidden="true" />
+                <span className="source-group-copy">
+                  <span className="source-group-title">
+                    INMET
+                    <span className="source-recommended">
+                      <BadgeCheck aria-hidden="true" />
+                      Recomendado
+                    </span>
+                  </span>
+                  <small>Normal por estação</small>
                 </span>
-                INMET 1991-2020
-                <small>Normal por estação</small>
-              </span>
-            </button>
+              </div>
+
+              <div className="source-period-toggle" role="group" aria-label="Período de referência INMET">
+                <button
+                  type="button"
+                  aria-label="INMET 1991-2020"
+                  className={climateDataSource === "1991-2020" ? "active" : ""}
+                  onClick={() => onClimateDataSourceChange("1991-2020")}
+                >
+                  <span className="source-title">
+                    1991-2020
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  aria-label="INMET 1981-2010"
+                  className={climateDataSource === "1981-2010" ? "active" : ""}
+                  onClick={() => onClimateDataSourceChange("1981-2010")}
+                >
+                  <span className="source-title">1981-2010</span>
+                </button>
+              </div>
+            </div>
+
             <button
               type="button"
-              className={climateDataSource === "1981-2010" ? "active" : ""}
-              onClick={() => onClimateDataSourceChange("1981-2010")}
-            >
-              <Database />
-              <span>
-                <span className="source-title">INMET 1981-2010</span>
-                <small>Normal por estação</small>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={climateDataSource === "open-meteo" ? "active" : ""}
+              className={`source-option ${climateDataSource === "open-meteo" ? "active" : ""}`}
               onClick={() => onClimateDataSourceChange("open-meteo")}
             >
               <CloudSun />
               <span>
-                <span className="source-title">
-                  Open-Meteo/ERA5
-                </span>
+                <span className="source-group-title">Open-Meteo/ERA5</span>
                 <small>Estimativa por coordenada</small>
               </span>
             </button>
@@ -1078,12 +1089,14 @@ function ClimatePanel({
 function CalculationTable({
   rows,
   inputs,
+  monthlyInputs,
   hasAnyInput,
   onInputChange,
   onClearInputs,
 }: {
   rows: MonthlyWaterBalance[];
   inputs: MonthlyTextInput[];
+  monthlyInputs: MonthlyInput[];
   hasAnyInput: boolean;
   onInputChange: (
     index: number,
@@ -1177,29 +1190,37 @@ function CalculationTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
-              <tr key={row.month}>
-                <td>{row.monthName}</td>
-                <td className="input-cell">
-                  <input
-                    value={inputs[index]?.precipitation ?? ""}
-                    inputMode="decimal"
-                    onChange={(event) =>
-                      onInputChange(index, "precipitation", event.target.value)
-                    }
-                    aria-label={`Precipitação de ${row.monthName}`}
-                  />
-                </td>
-                <td className="input-cell">
-                  <input
-                    value={inputs[index]?.temperature ?? ""}
-                    inputMode="decimal"
-                    onChange={(event) =>
-                      onInputChange(index, "temperature", event.target.value)
-                    }
-                    aria-label={`Temperatura de ${row.monthName}`}
-                  />
-                </td>
+            {rows.map((row, index) => {
+              const monthlyInput = monthlyInputs[index] ?? {
+                precipitation: null,
+                temperature: null,
+              };
+              const precipitationError = getMonthlyInputError(
+                monthlyInput,
+                "precipitation",
+                index,
+              );
+              const temperatureError = getMonthlyInputError(monthlyInput, "temperature", index);
+
+              return (
+                <tr key={row.month}>
+                  <td>{row.monthName}</td>
+                  <td className="input-cell">
+                    <CalculationInput
+                      value={inputs[index]?.precipitation ?? ""}
+                      error={precipitationError}
+                      ariaLabel={`Precipitação de ${row.monthName}`}
+                      onChange={(value) => onInputChange(index, "precipitation", value)}
+                    />
+                  </td>
+                  <td className="input-cell">
+                    <CalculationInput
+                      value={inputs[index]?.temperature ?? ""}
+                      error={temperatureError}
+                      ariaLabel={`Temperatura de ${row.monthName}`}
+                      onChange={(value) => onInputChange(index, "temperature", value)}
+                    />
+                  </td>
                 <td className="output-cell">{formatNumber(row.correctionFactor, 2)}</td>
                 <td className="output-cell">{formatNumber(row.monthlyHeatIndex, 2)}</td>
                 <td className="output-cell">{formatNumber(row.etp, 1)}</td>
@@ -1214,12 +1235,45 @@ function CalculationTable({
                     ? formatNumber(row.balance, 1)
                     : "-"}
                 </td>
-              </tr>
-            ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
     </section>
+  );
+}
+
+function CalculationInput({
+  value,
+  error,
+  ariaLabel,
+  onChange,
+}: {
+  value: string;
+  error: string | null;
+  ariaLabel: string;
+  onChange: (value: string) => void;
+}) {
+  const input = (
+    <input
+      value={value}
+      className={error ? "input-invalid" : undefined}
+      inputMode="decimal"
+      aria-invalid={error ? true : undefined}
+      aria-label={ariaLabel}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  );
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{input}</TooltipTrigger>
+      {error ? (
+        <TooltipContent className="calculation-input-error-tooltip">{error}</TooltipContent>
+      ) : null}
+    </Tooltip>
   );
 }
 

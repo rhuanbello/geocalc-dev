@@ -7,6 +7,8 @@ export type MonthlyInput = {
   temperature: number | null;
 };
 
+export type MonthlyInputField = keyof MonthlyInput;
+
 export type FactorSelection = {
   hemisphere: Hemisphere;
   latitude: SupportedLatitude;
@@ -227,21 +229,37 @@ function collectInputErrors(inputs: MonthlyInput[]): string[] {
   const errors: string[] = [];
 
   inputs.forEach((input, index) => {
-    const monthName = MONTHS[index].name;
-
-    if (input.precipitation !== null && input.precipitation < 0) {
-      errors.push(`${monthName}: precipitação não pode ser negativa.`);
-    }
-
-    if (
-      input.temperature !== null &&
-      (input.temperature < -60 || input.temperature > 70)
-    ) {
-      errors.push(`${monthName}: temperatura fora da faixa esperada.`);
+    for (const field of ["precipitation", "temperature"] as const) {
+      const error = getMonthlyInputError(input, field, index);
+      if (error) {
+        errors.push(error);
+      }
     }
   });
 
   return errors;
+}
+
+export function getMonthlyInputError(
+  input: MonthlyInput,
+  field: MonthlyInputField,
+  monthIndex: number,
+): string | null {
+  const monthName = MONTHS[monthIndex]?.name ?? "Mês";
+
+  if (field === "precipitation" && input.precipitation !== null && input.precipitation < 0) {
+    return `${monthName}: precipitação não pode ser negativa.`;
+  }
+
+  if (
+    field === "temperature" &&
+    input.temperature !== null &&
+    (input.temperature < -60 || input.temperature > 70)
+  ) {
+    return `${monthName}: temperatura fora da faixa esperada (-60 °C a 70 °C).`;
+  }
+
+  return null;
 }
 
 function sum(values: number[]): number {

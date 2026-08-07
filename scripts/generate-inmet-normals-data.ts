@@ -8,19 +8,19 @@ import type {
 } from "../src/shared/inmet-validation";
 
 const ROOT_DIR = process.cwd();
-const PERIOD = "1981-2010";
+const PERIOD = "1961-1990";
 const INMET_DIR = path.join(
   ROOT_DIR,
-  "Notes/Dados INMET/1981 - 2010",
+  "Notes/Dados INMET/1961 - 1990",
 );
 const OUTPUT_DIR = path.join(ROOT_DIR, "src/shared/data");
-const OUTPUT_FILE = path.join(OUTPUT_DIR, "inmet-normals-1981-2010.json");
+const OUTPUT_FILE = path.join(OUTPUT_DIR, "inmet-normals-1961-1990.json");
 
 async function main() {
   const [stations, precipitationRecords, temperatureRecords] = await Promise.all([
     readStations("Estações-Normal-Climatoógica-1981-2010.xlsx"),
-    readMonthlyRecords("30-Precipitação-Acumulada-NCB_1981-2010.xlsx"),
-    readMonthlyRecords("01-Temperatura-Média-Compensada-Bulbo-Seco-NCB_1981-2010.xlsx"),
+    readMonthlyRecords("Precipitacao-Acumulada_NCB_1961-1990.xlsx"),
+    readMonthlyRecords("Temperatura-Media-Compensada_NCB_1961-1990.xlsx"),
   ]);
   const dataset = buildInmetValidationDataset({
     stations,
@@ -77,8 +77,8 @@ async function readStations(fileName: string): Promise<InmetStation[]> {
       code,
       name: normalizeText(row.getCell(3).value),
       uf: normalizeText(row.getCell(4).value),
-      latitude: normalizeNumber(row.getCell(5).value),
-      longitude: normalizeNumber(row.getCell(6).value),
+      latitude: normalizeCoordinate(row.getCell(5).value, "latitude"),
+      longitude: normalizeCoordinate(row.getCell(6).value, "longitude"),
       altitude: normalizeNumber(row.getCell(7).value),
       status: normalizeText(row.getCell(10).value),
     });
@@ -151,7 +151,71 @@ function normalizeNumber(value: ExcelJS.CellValue): number | null {
   return null;
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+type CoordinateAxis = "latitude" | "longitude";
+
+const DMS_COORDINATE_PATTERN =
+  /^\s*(\d+(?:[.,]\d+)?)\s*[°º]\s*(?:(\d+(?:[.,]\d+)?)\s*['’′]\s*)?(?:(\d+(?:[.,]\d+)?)\s*["”″]\s*)?([NSEOW])\s*$/iu;
+
+export function normalizeCoordinate(
+  value: ExcelJS.CellValue,
+  axis: CoordinateAxis,
+): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return isValidCoordinate(value, axis) ? value : null;
+  }
+
+  const text = normalizeText(value);
+  if (!text || text === "-") {
+    return null;
+  }
+
+  const dmsMatch = text.match(DMS_COORDINATE_PATTERN);
+  if (dmsMatch) {
+    const [, degreesText, minutesText, secondsText, hemisphere] = dmsMatch;
+    const degrees = parseCoordinateDecimal(degreesText);
+    const minutes = minutesText ? parseCoordinateDecimal(minutesText) : 0;
+    const seconds = secondsText ? parseCoordinateDecimal(secondsText) : 0;
+
+    if (
+      degrees === null ||
+      minutes === null ||
+      seconds === null ||
+      minutes >= 60 ||
+      seconds >= 60
+    ) {
+      return null;
+    }
+
+    const decimal = degrees + minutes / 60 + seconds / 3600;
+    const signedDecimal = ["S", "W", "O"].includes(hemisphere.toUpperCase())
+      ? -decimal
+      : decimal;
+
+    return isValidCoordinate(signedDecimal, axis) ? signedDecimal : null;
+  }
+
+  const decimal = parseCoordinateDecimal(text);
+  return decimal !== null && isValidCoordinate(decimal, axis) ? decimal : null;
+}
+
+function parseCoordinateDecimal(value: string): number | null {
+  const compact = value.replace(/\s/g, "");
+  if (!/^[+-]?\d+(?:[.,]\d+)?$/.test(compact)) {
+    return null;
+  }
+
+  const parsed = Number(compact.replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isValidCoordinate(value: number, axis: CoordinateAxis): boolean {
+  const limit = axis === "latitude" ? 90 : 180;
+  return Math.abs(value) <= limit;
+}
+
+if (import.meta.main) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

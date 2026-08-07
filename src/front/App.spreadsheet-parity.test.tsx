@@ -244,6 +244,25 @@ describe("App spreadsheet parity", () => {
     expect(januaryPrecipitation.value).toBe("");
   });
 
+  test("sinaliza no campo a temperatura fora da faixa aceita", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const input = screen.getByLabelText("Temperatura de Janeiro") as HTMLInputElement;
+    await user.clear(input);
+    await user.type(input, "127,1");
+
+    expect(input.className).toContain("input-invalid");
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+
+    fireEvent.focus(input);
+    await waitFor(() => {
+      expect(screen.getByRole("tooltip").textContent).toBe(
+        "Janeiro: temperatura fora da faixa esperada (-60 °C a 70 °C).",
+      );
+    });
+  });
+
   test("preenche os valores da planilha e exibe os resultados arredondados esperados", async () => {
     const user = userEvent.setup();
     const { container } = render(<App />);
@@ -317,7 +336,7 @@ describe("App spreadsheet parity", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByText("INMET 1991-2020"));
+    await user.click(screen.getByRole("button", { name: "INMET 1991-2020" }));
 
     expect(screen.queryByRole("button", { name: /Importar dados climáticos/i })).toBeNull();
     expect(screen.getAllByText("Selecione uma estação INMET no mapa ou na busca.").length).toBeGreaterThan(0);
@@ -341,7 +360,7 @@ describe("App spreadsheet parity", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByText("INMET 1981-2010"));
+    await user.click(screen.getByRole("button", { name: "INMET 1981-2010" }));
     await user.click(screen.getByText("Selecionar estação INMET no mapa"));
 
     await waitFor(() => {

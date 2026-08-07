@@ -771,9 +771,55 @@ textarea:focus {
 
 .source-toggle {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 12px;
+}
+
+.source-group {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.source-group.active {
+  border-color: rgb(0 155 110 / 0.45);
+  background: #f2fbf6;
+}
+
+.source-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 8px;
+}
+
+.source-group-copy {
+  display: grid;
+  gap: 0;
+}
+
+.source-group-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--brand-dark);
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.source-group-heading small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.source-period-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
 }
 
 .source-toggle button {
@@ -789,6 +835,17 @@ textarea:focus {
   text-align: left;
 }
 
+.source-period-toggle button {
+  min-height: 48px;
+  justify-content: center;
+  padding: 8px;
+  text-align: center;
+}
+
+.source-period-toggle button > span {
+  justify-content: center;
+}
+
 .source-toggle button.active {
   border-color: rgb(0 155 110 / 0.45);
   background: #e7f6ef;
@@ -800,6 +857,12 @@ textarea:focus {
   height: 18px;
   color: var(--brand-green);
   flex: 0 0 auto;
+}
+
+.source-group-title svg {
+  width: 18px;
+  height: 18px;
+  color: var(--brand-green);
 }
 
 .source-toggle button > span {
@@ -1338,6 +1401,20 @@ td.input-cell input {
   border-color: rgb(255 255 255 / 0.34);
   background: rgb(255 255 255 / 0.94);
   color: var(--brand-dark);
+}
+
+td.input-cell input.input-invalid,
+td.input-cell input.input-invalid:focus {
+  border-color: #bd3b32;
+  background: #fff1ef;
+  color: #8d241d;
+  box-shadow: inset 0 0 0 1px rgb(189 59 50 / 0.25);
+}
+
+.calculation-input-error-tooltip {
+  max-width: 250px;
+  border: 1px solid rgb(189 59 50 / 0.4);
+  background: #7b241c;
 }
 
 .positive {
