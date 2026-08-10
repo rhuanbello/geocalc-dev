@@ -3,6 +3,7 @@ import "leaflet/dist/leaflet.css";
 import markerIcon2xUrl from "leaflet/dist/images/marker-icon-2x.png";
 import markerIconUrl from "leaflet/dist/images/marker-icon.png";
 import markerShadowUrl from "leaflet/dist/images/marker-shadow.png";
+import { Maximize2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { InmetNormalStation } from "$/inmet-normals";
 
@@ -51,6 +52,10 @@ const previewStationIcon = L.divIcon({
   iconAnchor: [16, 16],
 });
 
+const DEFAULT_MAP_CENTER: L.LatLngExpression = [-14.2, -51.9];
+const DEFAULT_MAP_ZOOM = 4;
+const CONTEXT_ZOOM = 5;
+
 export function MapPicker({
   point,
   onPointChange,
@@ -82,7 +87,7 @@ export function MapPicker({
     const map = L.map(containerRef.current, {
       zoomControl: false,
       worldCopyJump: true,
-    }).setView([-14.2, -51.9], 4);
+    }).setView(DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM);
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -177,9 +182,49 @@ export function MapPicker({
     });
   }, [stations, selectedStationCode, previewStation]);
 
+  const resetMapView = () => {
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+
+    if (point) {
+      map.setView([point.latitude, point.longitude], CONTEXT_ZOOM, {
+        animate: true,
+      });
+      return;
+    }
+
+    if (stations.length > 0) {
+      const bounds = L.latLngBounds(
+        stations.map((station) => [station.latitude, station.longitude]),
+      );
+      map.fitBounds(bounds, {
+        animate: true,
+        maxZoom: CONTEXT_ZOOM,
+        padding: [36, 36],
+      });
+      return;
+    }
+
+    map.setView(DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM, { animate: true });
+  };
+
   return (
     <div className="map-frame">
       <div ref={containerRef} className="map-canvas" aria-label="Mapa" />
+      <button
+        className="map-reset-control"
+        type="button"
+        aria-label="Reenquadrar mapa"
+        title="Reenquadrar mapa"
+        onClick={(event) => {
+          event.stopPropagation();
+          resetMapView();
+        }}
+      >
+        <Maximize2 aria-hidden="true" />
+      </button>
       <div className="map-hint">
         {stations.length
           ? "Clique em uma estação INMET para usar a normal climatológica"

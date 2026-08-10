@@ -79,23 +79,14 @@ button:disabled {
   color: #f8f3e9;
 }
 
-.institution-brand {
+.sidebar-brand {
   display: grid;
-  gap: 12px;
+  gap: 4px;
   padding-bottom: 18px;
   border-bottom: 1px solid rgb(248 243 233 / 0.16);
 }
 
-.institution-brand img {
-  width: 174px;
-  max-width: 100%;
-  height: auto;
-  padding: 10px;
-  border-radius: 7px;
-  background: #fff;
-}
-
-.institution-brand strong {
+.sidebar-brand strong {
   display: block;
   font-size: 1.28rem;
   line-height: 1.1;
@@ -108,7 +99,7 @@ button:disabled {
   letter-spacing: 0;
 }
 
-.institution-brand span {
+.sidebar-brand span {
   color: rgb(248 243 233 / 0.72);
   font-size: 0.84rem;
   line-height: 1.45;
@@ -169,11 +160,81 @@ button:disabled {
 }
 
 .module-header {
-  padding: 18px;
-  border: 1px solid var(--line);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 214px minmax(0, 1fr) 74px;
+  min-height: 150px;
+  overflow: hidden;
+  border: 1px solid #123322;
   border-radius: 8px;
-  background: rgb(255 255 255 / 0.9);
-  box-shadow: var(--shadow);
+  background: var(--brand-dark);
+  box-shadow: 0 14px 32px rgb(26 59 41 / 0.18);
+  color: #f8f3e9;
+}
+
+.module-header::before,
+.module-header::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+}
+
+.module-header::before {
+  right: 24px;
+  bottom: -82px;
+  width: 192px;
+  height: 192px;
+  border: 1px solid rgb(97 206 112 / 0.24);
+  transform: rotate(45deg);
+}
+
+.module-header::after {
+  right: 160px;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: rgb(248 243 233 / 0.14);
+}
+
+.module-header-institution {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 18px 20px;
+  border-right: 1px solid rgb(248 243 233 / 0.16);
+  background: rgb(0 0 0 / 0.09);
+}
+
+.module-header-institution img {
+  width: min(172px, 100%);
+  padding: 6px;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.module-header-institution span {
+  max-width: 184px;
+  color: rgb(248 243 233 / 0.72);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.module-header-content {
+  align-self: center;
+  padding: 16px 24px;
+}
+
+.module-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--brand-accent);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .eyebrow {
@@ -193,11 +254,46 @@ h1 {
   letter-spacing: 0;
 }
 
+.module-header h1 {
+  color: #fffdf8;
+  font-size: clamp(1.8rem, 2.6vw, 2.75rem);
+}
+
+.module-header h1 span {
+  color: #aee5b4;
+}
+
 .module-header p {
   max-width: 760px;
-  margin: 10px 0 0;
-  color: var(--muted);
+  margin: 5px 0 0;
+  font-size: 0.88rem;
+  color: rgb(248 243 233 / 0.76);
   line-height: 1.55;
+}
+
+.module-header-index {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  border-left: 1px solid rgb(248 243 233 / 0.16);
+  background: rgb(0 0 0 / 0.08);
+}
+
+.module-header-index span,
+.module-header-index small {
+  color: rgb(248 243 233 / 0.66);
+  font-size: 0.67rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.module-header-index strong {
+  color: var(--brand-accent);
+  font-family: "Roboto Slab", Georgia, serif;
+  font-size: 2rem;
+  line-height: 1;
 }
 
 .panel {
@@ -251,7 +347,7 @@ h1 {
 
 .methodology-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
 }
@@ -278,6 +374,33 @@ h1 {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgb(255 255 255 / 0.92);
+}
+
+.methodology-card {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.methodology-card.is-thornthwaite-indices {
+  grid-column: 1 / -1;
+  min-height: 0;
+  padding: 12px 14px;
+}
+
+.methodology-card.is-thornthwaite-indices .methodology-card-formulas {
+  grid-template-columns: minmax(80px, 0.5fr) minmax(100px, 0.5fr) minmax(0, 2fr);
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.methodology-card.is-thornthwaite-indices .formula {
+  align-content: center;
+  min-height: 44px;
+}
+
+.methodology-card.is-half-width {
+  grid-column: span 3;
 }
 
 .methodology-card h3,
@@ -343,6 +466,11 @@ h1 {
   display: grid;
   gap: 6px;
   margin-top: 11px;
+}
+
+.methodology-card-formulas {
+  margin-top: auto;
+  padding-top: 11px;
 }
 
 .methodology-card-formulas > .formula,
@@ -1037,6 +1165,41 @@ textarea:focus {
   height: 100%;
 }
 
+.map-reset-control {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 500;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgb(26 59 41 / 0.2);
+  border-radius: 6px;
+  background: rgb(255 253 248 / 0.96);
+  box-shadow: 0 2px 8px rgb(26 59 41 / 0.14);
+  color: var(--brand-dark);
+  cursor: pointer;
+  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.map-reset-control svg {
+  width: 17px;
+  height: 17px;
+}
+
+.map-reset-control:hover {
+  background: #e4f4eb;
+  box-shadow: 0 4px 12px rgb(26 59 41 / 0.2);
+  transform: translateY(-1px);
+}
+
+.map-reset-control:focus-visible {
+  outline: 3px solid rgb(0 155 110 / 0.32);
+  outline-offset: 2px;
+}
+
 .map-hint {
   position: absolute;
   left: 10px;
@@ -1213,28 +1376,6 @@ textarea:focus {
   color: var(--water-dark);
   font-weight: 800;
   line-height: 1.4;
-}
-
-.empty-inline {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 11px 12px;
-  border: 1px dashed var(--line);
-  border-radius: 7px;
-  background: #f7fbf9;
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.45;
-}
-
-.empty-inline svg {
-  width: 17px;
-  height: 17px;
-  margin-top: 1px;
-  color: var(--brand-green);
-  flex: 0 0 auto;
 }
 
 .notice.error {
@@ -1613,15 +1754,9 @@ td.input-cell input.input-invalid:focus {
     align-items: center;
   }
 
-  .institution-brand {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
+  .sidebar-brand {
     border-bottom: 0;
     padding-bottom: 0;
-  }
-
-  .institution-brand img {
-    width: 92px;
   }
 
   .sidebar-nav {
@@ -1630,7 +1765,6 @@ td.input-cell input.input-invalid:focus {
     justify-content: flex-end;
   }
 
-  .module-header,
   .climate-grid {
     grid-template-columns: 1fr;
   }
@@ -1639,6 +1773,15 @@ td.input-cell input.input-invalid:focus {
   .reference-grid,
   .variable-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .methodology-card,
+  .methodology-card.is-half-width {
+    grid-column: span 1;
+  }
+
+  .methodology-card.is-thornthwaite-indices {
+    grid-column: 1 / -1;
   }
 
   .map-frame {
@@ -1665,6 +1808,55 @@ td.input-cell input.input-invalid:focus {
     padding: 14px;
   }
 
+  .module-header {
+    grid-template-columns: 86px minmax(0, 1fr) 54px;
+    min-height: 96px;
+    padding: 0;
+  }
+
+  .module-header-institution {
+    grid-column: auto;
+    display: grid;
+    place-items: center;
+    padding: 10px;
+    border-right: 1px solid rgb(248 243 233 / 0.16);
+    border-bottom: 0;
+  }
+
+  .module-header-institution img {
+    width: 66px;
+    padding: 4px;
+  }
+
+  .module-header-institution span {
+    display: none;
+  }
+
+  .module-header-content {
+    padding: 13px 12px;
+  }
+
+  .module-header h1 {
+    font-size: clamp(1.5rem, 7vw, 2rem);
+  }
+
+  .module-header p {
+    display: none;
+  }
+
+  .module-kicker {
+    margin-bottom: 3px;
+    font-size: 0.6rem;
+  }
+
+  .module-header-index {
+    border-left: 1px solid rgb(248 243 233 / 0.16);
+  }
+
+  .module-header::after {
+    right: 98px;
+  }
+
   .methodology-grid,
   .climate-method-grid,
   .reference-grid,
@@ -1673,6 +1865,19 @@ td.input-cell input.input-invalid:focus {
   .climate-factor-controls,
   .coordinate-facts,
   .period-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .methodology-card,
+  .methodology-card.is-half-width {
+    grid-column: auto;
+  }
+
+  .methodology-card.is-thornthwaite-indices {
+    gap: 8px;
+  }
+
+  .methodology-card.is-thornthwaite-indices .methodology-card-formulas {
     grid-template-columns: 1fr;
   }
 

@@ -158,7 +158,7 @@ describe("App spreadsheet parity", () => {
 
     expect(container.querySelector(".header-metrics")).toBeNull();
     expect(screen.getByText("Conceitos básicos e metodologia")).toBeTruthy();
-    expect(screen.getByText("O que é o balanço hídrico")).toBeTruthy();
+    expect(screen.getByText("O que é o Balanço Hídrico (BH)?")).toBeTruthy();
     expect(screen.getByText("Entrada e saída de água no BH")).toBeTruthy();
     expect(screen.getByText("Por que estimar a Etp")).toBeTruthy();
     expect(screen.getByText("Índices na fórmula de Thornthwaite")).toBeTruthy();
@@ -339,7 +339,7 @@ describe("App spreadsheet parity", () => {
     await user.click(screen.getByRole("button", { name: "INMET 1991-2020" }));
 
     expect(screen.queryByRole("button", { name: /Importar dados climáticos/i })).toBeNull();
-    expect(screen.getAllByText("Selecione uma estação INMET no mapa ou na busca.").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Selecione uma estação INMET no mapa ou na busca.")).toBeNull();
     expect(screen.getByRole("combobox", { name: "Estação INMET" })).toBeTruthy();
 
     await user.click(screen.getByText("Selecionar estação INMET no mapa"));
@@ -394,7 +394,7 @@ describe("App spreadsheet parity", () => {
   test("simplifica a sidebar", () => {
     render(<App />);
 
-    expect(screen.getByText("Balanço Hídrico")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Balanço Hídrico" })).toBeTruthy();
     expect(screen.queryByText("Modelos geoquímicos")).toBeNull();
     expect(screen.queryByText(/Ferramenta educacional/)).toBeNull();
   });

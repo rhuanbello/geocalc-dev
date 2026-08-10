@@ -70,7 +70,7 @@ export const REFERENCE_SOURCES: ReferenceSource[] = [
 
 export const WATER_BALANCE_METHODOLOGY: MethodologySection[] = [
   {
-    title: "O que é o balanço hídrico",
+    title: "O que é o Balanço Hídrico (BH)?",
     body:
       "O Balanço Hídrico (BH), grosso modo, compara a quantidade de água que entra e a que sai de um território, p.ex. uma bacia hidrográfica, durante um período de tempo. O BH permite contabilizar a variação entre os volumes de entrada e saída de água no território no período analisado.",
   },
@@ -123,19 +123,11 @@ export const CLIMATE_IMPORT_METHODOLOGY: MethodologySection[] = [
     title: "Open-Meteo/ERA5 por coordenada",
     body:
       "Quando não houver uma estação INMET adequada, o GeoCalc pode estimar os valores para qualquer coordenada. Para cada mês, a precipitação é obtida pela soma diária e a temperatura, pela média das temperaturas médias diárias.",
-    formulas: [
-      "P_{mensal} = \\sum P_{dia}",
-      "t_{mensal} = \\overline{t_{dia}}",
-    ],
   },
   {
     title: "Normal estimada por coordenada",
     body:
       "Nos anos completos do período selecionado, o GeoCalc reúne meses equivalentes: janeiros com janeiros, fevereiros com fevereiros e assim sucessivamente. As normais mensais de P e t resultantes são usadas no cálculo do BH.",
-    formulas: [
-      "P_{normal} = \\overline{P_{mensal}}",
-      "t_{normal} = \\overline{t_{mensal}}",
-    ],
   },
 ];
 

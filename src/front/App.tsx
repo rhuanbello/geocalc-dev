@@ -11,7 +11,6 @@ import {
   Info,
   Loader2,
   MapPin,
-  TriangleAlert,
 } from "lucide-react";
 import {
   useEffect,
@@ -213,9 +212,6 @@ export function App() {
   const [endYear, setEndYear] = useState(DEFAULT_END_YEAR);
   const [isImporting, setIsImporting] = useState(false);
   const [isIdentifyingLocation, setIsIdentifyingLocation] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [missingMonths, setMissingMonths] = useState<number[]>([]);
   const [notifications, setNotifications] = useState<Array<{
     id: number;
     message: string;
@@ -292,9 +288,6 @@ export function App() {
     setSelectedPoint(point);
     setSelectedLocation(location);
     setFactorSelection(nearestFactorSelection(point.latitude));
-    setStatusMessage(
-      "Local selecionado. Você pode preencher a tabela com dados climáticos ou editar os valores manualmente.",
-    );
   };
 
   const updatePointFromMap = async (point: MapPoint) => {
@@ -306,24 +299,15 @@ export function App() {
     setSelectedPoint(point);
     setSelectedLocation(null);
     setFactorSelection(nearestFactorSelection(point.latitude));
-    setErrorMessage(null);
-    setStatusMessage("Identificando local selecionado no mapa...");
     setIsIdentifyingLocation(true);
 
     try {
       const location = await reverseGeocodePoint(point);
       if (location) {
         setSelectedLocation(location);
-        setStatusMessage("Local identificado. Você pode importar dados climáticos.");
-      } else {
-        setStatusMessage(
-          "Coordenada selecionada no mapa. Você pode importar dados climáticos.",
-        );
       }
     } catch {
-      setStatusMessage(
-        "Coordenada selecionada no mapa. Não foi possível identificar o nome do local agora.",
-      );
+      // The selected coordinate remains usable when location naming is unavailable.
     } finally {
       setIsIdentifyingLocation(false);
     }
@@ -334,7 +318,7 @@ export function App() {
     setSelectedLocation(null);
     setSelectedInmetStationCode(null);
     setPreviewedInmetStation(null);
-    setStatusMessage("Local removido. Busque uma cidade ou selecione um ponto no mapa.");
+    showNotification("Local removido.");
   };
 
   const handleImportClimate = async () => {
@@ -342,8 +326,6 @@ export function App() {
       return;
     }
 
-    setErrorMessage(null);
-    setStatusMessage(null);
     setIsImporting(true);
 
     try {
@@ -361,9 +343,8 @@ export function App() {
           temperature: formatInputNumber(input.temperature),
         })),
       );
-      setMissingMonths(result.missingMonths);
       setSourceState("open-meteo");
-      setStatusMessage(
+      showNotification(
         result.missingMonths.length
           ? "Importação concluída com meses sem dados completos. Revise a tabela."
           : result.fromCache
@@ -371,7 +352,7 @@ export function App() {
             : `Dados climáticos ${CLIMATE_MODEL_LABEL} importados. Os campos continuam editáveis.`,
       );
     } catch (error) {
-      setErrorMessage(
+      showNotification(
         error instanceof Error
           ? error.message
           : "Não foi possível importar dados climáticos.",
@@ -397,8 +378,6 @@ export function App() {
   const updateClimateDataSource = (dataSource: ClimateDataSource) => {
     setClimateDataSource(dataSource);
     setPreviewedInmetStation(null);
-    setErrorMessage(null);
-    setMissingMonths([]);
 
     if (dataSource === "inmet") {
       const [startYear, endYear] = inmetPeriodYears(inmetPeriod);
@@ -410,7 +389,6 @@ export function App() {
       setPeriodPreset(inmetPeriod);
       setStartYear(startYear);
       setEndYear(endYear);
-      setStatusMessage("Selecione uma estação INMET no mapa ou na busca.");
       return;
     }
 
@@ -419,7 +397,6 @@ export function App() {
     setSelectedLocation(null);
     setMonthlyTextInputs(EMPTY_MONTHLY_TEXT_INPUTS);
     setSourceState("manual");
-    setStatusMessage("Fonte Open-Meteo selecionada. Busque uma cidade ou clique no mapa.");
   };
 
   const updateInmetPeriod = (period: InmetNormalPeriod) => {
@@ -435,12 +412,9 @@ export function App() {
     setPeriodPreset(period);
     setStartYear(nextStartYear);
     setEndYear(nextEndYear);
-    setStatusMessage("Selecione uma estação INMET no mapa ou na busca.");
   };
 
   const selectInmetStation = (station: InmetNormalStation | null) => {
-    setErrorMessage(null);
-    setMissingMonths([]);
     setPreviewedInmetStation(null);
 
     if (!station) {
@@ -449,7 +423,6 @@ export function App() {
       setSelectedLocation(null);
       setMonthlyTextInputs(EMPTY_MONTHLY_TEXT_INPUTS);
       setSourceState("manual");
-      setStatusMessage("Selecione uma estação INMET no mapa ou na busca.");
       return;
     }
 
@@ -479,7 +452,7 @@ export function App() {
       })),
     );
     setSourceState("inmet");
-    setStatusMessage(
+    showNotification(
       `Dados INMET ${inmetPeriod} carregados para ${inmetStationLabel(station)}.`,
     );
   };
@@ -508,9 +481,8 @@ export function App() {
 
   const clearInputs = () => {
     setMonthlyTextInputs(EMPTY_MONTHLY_TEXT_INPUTS);
-    setMissingMonths([]);
     setSourceState("manual");
-    setStatusMessage("Tabela limpa para preenchimento manual.");
+    showNotification("Tabela limpa para preenchimento manual.");
   };
 
   const dismissNotification = (id: number) => {
@@ -551,7 +523,6 @@ export function App() {
 
   const copyReport = async () => {
     await navigator.clipboard.writeText(report);
-    setStatusMessage("Síntese copiada.");
     showNotification("Síntese copiada para a área de transferência.");
   };
 
@@ -570,7 +541,6 @@ export function App() {
       inmetPeriod: selectedInmetPeriod,
       climateModel: CLIMATE_MODEL_LABEL,
     });
-    setStatusMessage("Planilha Excel exportada.");
     showNotification("Planilha Excel exportada com sucesso.");
   };
 
@@ -602,10 +572,6 @@ export function App() {
             canImport={canImport}
             isImporting={isImporting}
             isIdentifyingLocation={isIdentifyingLocation}
-            statusMessage={statusMessage}
-            errorMessage={errorMessage}
-            missingMonths={missingMonths}
-            waterBalanceErrors={waterBalance.errors}
             onClimateDataSourceChange={updateClimateDataSource}
             onInmetPeriodChange={updateInmetPeriod}
             onPointChange={updatePoint}
@@ -613,7 +579,11 @@ export function App() {
             onInmetStationChange={selectInmetStation}
             onInmetStationPreviewChange={setPreviewedInmetStation}
             onLocationClear={clearLocation}
-            onLocationSearchError={setErrorMessage}
+            onLocationSearchError={(message) => {
+              if (message) {
+                showNotification(message);
+              }
+            }}
             onFactorSelectionChange={setFactorSelection}
             onPeriodPresetChange={updatePeriodPreset}
             onStartYearChange={updateStartYear}
@@ -668,17 +638,11 @@ export function App() {
 }
 
 function AppSidebar() {
-  const baseUrl = import.meta.env.BASE_URL ?? "/";
-  const logoUrl = `${baseUrl}brand/logo-geoquimica-colorido.png`;
-
   return (
     <aside className="app-sidebar" aria-label="Navegação principal">
-      <div className="institution-brand">
-        <img src={logoUrl} alt="PPG Geoquímica UFF" />
-        <div>
-          <strong className="wordmark">GeoCalc</strong>
-          <span>PPG Geoquímica / UFF</span>
-        </div>
+      <div className="sidebar-brand">
+        <strong className="wordmark">GeoCalc</strong>
+        <span>PPG Geoquímica / UFF</span>
       </div>
 
       <nav className="sidebar-nav">
@@ -692,11 +656,27 @@ function AppSidebar() {
 }
 
 function ModuleHeader() {
+  const baseUrl = import.meta.env.BASE_URL ?? "/";
+  const logoUrl = `${baseUrl}brand/logo-geoquimica-colorido.png`;
+
   return (
     <header className="module-header" id="balanco-hidrico">
-      <div>
-        <p className="eyebrow">Módulo ativo</p>
-        <h1>Balanço Hídrico (BH)</h1>
+      <div className="module-header-institution">
+        <img src={logoUrl} alt="PPG Geoquímica UFF" />
+        <span>Programa de Pós-Graduação em Geociências</span>
+      </div>
+      <div className="module-header-content">
+        <span className="module-kicker">GeoCalc · módulo de cálculo</span>
+        <h1>Balanço Hídrico <span>(BH)</span></h1>
+        <p>
+          Estimativa mensal da disponibilidade de água a partir de precipitação,
+          temperatura e fator de correção por latitude.
+        </p>
+      </div>
+      <div className="module-header-index" aria-label="Módulo 01, balanço hídrico">
+        <span>Módulo</span>
+        <strong>01</strong>
+        <small>BH</small>
       </div>
     </header>
   );
@@ -712,7 +692,17 @@ function MethodologyPanel() {
       />
       <div className="methodology-grid">
         {WATER_BALANCE_METHODOLOGY.map((section) => (
-          <article key={section.title} className="methodology-card">
+          <article
+            key={section.title}
+            className={`methodology-card${
+              section.title === "Índices na fórmula de Thornthwaite"
+                ? " is-thornthwaite-indices"
+                : section.title === "Correção de Etp para a latitude" ||
+                    section.title === "Superávit (SH) e Déficit (DH) Hídricos"
+                  ? " is-half-width"
+                  : ""
+            }`}
+          >
             <h3>{section.title}</h3>
             {section.note ? (
               <p className="methodology-card-note">
@@ -777,10 +767,6 @@ function ClimatePanel({
   canImport,
   isImporting,
   isIdentifyingLocation,
-  statusMessage,
-  errorMessage,
-  missingMonths,
-  waterBalanceErrors,
   onClimateDataSourceChange,
   onInmetPeriodChange,
   onPointChange,
@@ -809,10 +795,6 @@ function ClimatePanel({
   canImport: boolean;
   isImporting: boolean;
   isIdentifyingLocation: boolean;
-  statusMessage: string | null;
-  errorMessage: string | null;
-  missingMonths: number[];
-  waterBalanceErrors: string[];
   onClimateDataSourceChange: (dataSource: ClimateDataSource) => void;
   onInmetPeriodChange: (period: InmetNormalPeriod) => void;
   onPointChange: (point: MapPoint, location: LocationSearchResult | null) => void;
@@ -1064,38 +1046,6 @@ function ClimatePanel({
               </div>
             </div>
           ) : null}
-
-          {!selectedPoint && (
-            <div className="empty-inline">
-              <Info />
-              <span>
-                {isInmetSource
-                  ? "Selecione uma estação INMET no mapa ou na busca."
-                  : "Selecione um local na busca ou clique no mapa para habilitar a importação climática."}
-              </span>
-            </div>
-          )}
-
-          {(statusMessage || errorMessage || waterBalanceErrors.length > 0) && (
-            <div className={errorMessage ? "notice error" : "notice"}>
-              {errorMessage ? <TriangleAlert className="size-4" /> : null}
-              <span>
-                {errorMessage ??
-                  statusMessage ??
-                  waterBalanceErrors.slice(0, 2).join(" ")}
-              </span>
-            </div>
-          )}
-
-          {missingMonths.length > 0 && (
-            <div className="notice warning">
-              Meses incompletos:{" "}
-              {missingMonths
-                .map((month) => MONTHS[month - 1]?.short)
-                .filter(Boolean)
-                .join(", ")}
-            </div>
-          )}
 
         </div>
 
