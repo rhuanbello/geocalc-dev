@@ -175,7 +175,8 @@ describe("App spreadsheet parity", () => {
         "i = (t / 5)^{1,514}",
         "I = soma(i)",
         "a = (675 * 10^{-9} * I^3) - (771 * 10^{-7} * I^2) + (0,01792 * I) + 0,49239",
-        "\\text{Etp corrigida} = Etp * FC = P - \\text{Etp corrigida}",
+        "\\text{Etp corrigida} = Etp * FC",
+        "BH = P - \\text{Etp corrigida}",
       ]),
     );
     expect(screen.getAllByText(/Thornthwaite/).length).toBeGreaterThan(0);
@@ -187,7 +188,7 @@ describe("App spreadsheet parity", () => {
     expect(screen.getByText("Precipitação mensal")).toBeTruthy();
     expect(screen.getByText("Temperatura mensal")).toBeTruthy();
     expect(screen.getByText("Normal do período")).toBeTruthy();
-    expect(screen.getByText("Meses incompletos")).toBeTruthy();
+    expect(screen.getByText("Normal estimada por coordenada")).toBeTruthy();
     expect(screen.getAllByText(/dados diários/).length).toBeGreaterThan(0);
     expect(screen.getByText("Referências e fontes")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Open-Meteo Historical Weather API" })).toBeTruthy();
@@ -376,6 +377,19 @@ describe("App spreadsheet parity", () => {
       "Fonte dos dados: INMET Normais Climatológicas do Brasil 1981-2010",
     );
     expect(report.value).toContain("Estação INMET: 82989 - ÁGUA BRANCA, AL");
+  });
+
+  test("usa INMET como fonte inicial e disponibiliza a normal 1961-1990", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(screen.getByRole("combobox", { name: "Estação INMET" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "INMET 1961-1990" }));
+    await user.click(screen.getByText("Selecionar estação INMET no mapa"));
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).not.toBe("");
+    });
   });
 
   test("simplifica a sidebar", () => {

@@ -1,6 +1,6 @@
 export type Hemisphere = "north" | "south";
 
-export type SupportedLatitude = 10 | 20 | 30 | 40 | 50 | 60;
+export type SupportedLatitude = number;
 
 export type MonthlyInput = {
   precipitation: number | null;
@@ -66,11 +66,11 @@ export const EMPTY_MONTHLY_INPUTS: MonthlyInput[] = MONTHS.map(() => ({
 }));
 
 export const SUPPORTED_LATITUDES: Record<Hemisphere, SupportedLatitude[]> = {
-  north: [10, 20, 30, 40, 50, 60],
-  south: [10, 20, 30, 40, 50],
+  north: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60],
+  south: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
 };
 
-const correctionFactors: Record<Hemisphere, Record<SupportedLatitude, number[]>> =
+const baseCorrectionFactors: Record<Hemisphere, Record<number, number[]>> =
   {
     north: {
       10: [0.99, 0.93, 1.02, 1.02, 1.07, 1.05, 1.07, 1.06, 1.01, 1.01, 0.97, 0.98],
@@ -87,19 +87,45 @@ const correctionFactors: Record<Hemisphere, Record<SupportedLatitude, number[]>>
       // TODO: validar com docente: Outubro / Sul 40 aparece como 0.87 na planilha.
       40: [1.28, 1.08, 1.06, 0.92, 0.86, 0.77, 0.84, 0.91, 0.99, 0.87, 1.19, 1.27],
       50: [1.35, 1.15, 1.06, 0.88, 0.76, 0.67, 0.73, 0.87, 0.98, 1.18, 1.28, 1.39],
-      60: [],
     },
   };
+
+const correctionFactors: Record<Hemisphere, Record<number, number[]>> = {
+  north: expandCorrectionFactors("north"),
+  south: expandCorrectionFactors("south"),
+};
+
+function expandCorrectionFactors(hemisphere: Hemisphere): Record<number, number[]> {
+  const original = baseCorrectionFactors[hemisphere];
+  const expanded: Record<number, number[]> = { 0: Array(12).fill(1) };
+  const supported = SUPPORTED_LATITUDES[hemisphere];
+
+  for (const latitude of supported) {
+    if (latitude % 10 === 0 && original[latitude]) {
+      expanded[latitude] = original[latitude];
+      continue;
+    }
+
+    const lower = latitude - 5;
+    const upper = latitude + 5;
+    const lowerFactors = expanded[lower] ?? original[lower];
+    const upperFactors = original[upper];
+    if (lowerFactors && upperFactors) {
+      expanded[latitude] = lowerFactors.map(
+        (factor, monthIndex) => (factor + upperFactors[monthIndex]!) / 2,
+      );
+    }
+  }
+
+  return expanded;
+}
 
 export function nearestFactorSelection(latitude: number): FactorSelection {
   const hemisphere: Hemisphere = latitude >= 0 ? "north" : "south";
   const absoluteLatitude = Math.abs(latitude);
   const supported = SUPPORTED_LATITUDES[hemisphere];
-  const nearest = supported.reduce((best, current) => {
-    const currentDistance = Math.abs(current - absoluteLatitude);
-    const bestDistance = Math.abs(best - absoluteLatitude);
-    return currentDistance < bestDistance ? current : best;
-  }, supported[0]);
+  const maximum = supported[supported.length - 1] ?? 0;
+  const nearest = Math.min(maximum, Math.max(0, Math.round(absoluteLatitude / 5) * 5));
 
   return { hemisphere, latitude: nearest };
 }

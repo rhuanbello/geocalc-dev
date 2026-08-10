@@ -51,6 +51,15 @@ describe("INMET normals dataset", () => {
     ).toBe(true);
   });
 
+  test("exposes only complete 1961-1990 stations", () => {
+    const dataset = getInmetNormalsDataset("1961-1990");
+
+    expect(dataset.period).toBe("1961-1990");
+    expect(dataset.stationCount).toBe(280);
+    expect(listInmetStations("1961-1990")).toHaveLength(280);
+    expect(getInmetStationByCode("82704", "1961-1990")?.name).toBe("Cruzeiro do Sul");
+  });
+
   test("finds stations by code, name and UF", () => {
     expect(getInmetStationByCode("83377")?.name).toBe("BRASILIA");
     expect(searchInmetStations("brasilia").some((station) => station.code === "83377")).toBe(true);

@@ -8,6 +8,7 @@ build/
 # local reference spreadsheets
 *.xlsx
 *.xls
+docs/
 
 # local env
 .env

@@ -1,10 +1,10 @@
-import inmetNormals19912020 from "./data/inmet-normals-1991-2020.json";
+import inmetNormals19611990 from "./data/inmet-normals-1961-1990.json";
 import inmetNormals19812010 from "./data/inmet-normals-1981-2010.json";
+import inmetNormals19912020 from "./data/inmet-normals-1991-2020.json";
 import type { MonthlyInput } from "./water-balance";
 
-export type InmetNormalPeriod = "1981-2010" | "1991-2020";
-
-export type ClimateDataSource = "open-meteo" | InmetNormalPeriod;
+export type ClimateDataSource = "inmet" | "open-meteo";
+export type InmetNormalPeriod = "1961-1990" | "1981-2010" | "1991-2020";
 
 export type InmetNormalStation = {
   code: string;
@@ -29,15 +29,10 @@ export type InmetNormalsDataset = {
 export const DEFAULT_INMET_NORMAL_PERIOD: InmetNormalPeriod = "1991-2020";
 
 const datasets: Record<InmetNormalPeriod, InmetNormalsDataset> = {
+  "1961-1990": inmetNormals19611990 as InmetNormalsDataset,
   "1981-2010": inmetNormals19812010 as InmetNormalsDataset,
   "1991-2020": inmetNormals19912020 as InmetNormalsDataset,
 };
-
-export function isInmetNormalPeriod(
-  value: ClimateDataSource,
-): value is InmetNormalPeriod {
-  return value !== "open-meteo";
-}
 
 export function getInmetNormalsDataset(
   period: InmetNormalPeriod = DEFAULT_INMET_NORMAL_PERIOD,

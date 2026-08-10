@@ -1,7 +1,10 @@
 import ExcelJS from "exceljs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { aggregateDailyClimateToMonthlyNormals } from "../src/shared/climate";
+import {
+  aggregateDailyClimateToMonthlyNormals,
+  type DailyClimateSeries,
+} from "../src/shared/climate";
 import {
   buildInmetValidationDataset,
   compareStationWithEra5,
@@ -18,13 +21,13 @@ import {
   type MonthlyInput,
 } from "../src/shared/water-balance";
 
-const PERIOD = "1981-2010";
-const START_DATE = "1981-01-01";
-const END_DATE = "2010-12-31";
+const PERIOD = "1991-2020";
+const START_DATE = "1991-01-01";
+const END_DATE = "2020-12-31";
 const ROOT_DIR = process.cwd();
 const INMET_DIR = path.join(
   ROOT_DIR,
-  "Notes/Dados INMET/1981 - 2010",
+  "docs/semana 02/Dados INMET/1991 - 2020",
 );
 const GENERATED_DIR = path.join(ROOT_DIR, "docs/gerados");
 const MODEL_CONFIGS = {
@@ -43,13 +46,27 @@ const SELECTED_MODEL = parseModelArg();
 const MODEL = SELECTED_MODEL.apiValue;
 const MODEL_LABEL = SELECTED_MODEL.label;
 const MODEL_SLUG = SELECTED_MODEL.slug;
+const WORST_FROM_MODEL = parseWorstFromModelArg();
+const SAMPLE_LIMIT = parseLimitArg();
+const USE_WINDOWED_FETCH = true;
+const BATCH_SIZE = 1;
+const DOWNLOAD_DELAY_MS = 8000;
+const MAX_FETCH_ATTEMPTS = 6;
+const DATE_WINDOWS = [
+  { start: "1991-01-01", end: "1995-12-31" },
+  { start: "1996-01-01", end: "2000-12-31" },
+  { start: "2001-01-01", end: "2005-12-31" },
+  { start: "2006-01-01", end: "2010-12-31" },
+  { start: "2011-01-01", end: "2015-12-31" },
+  { start: "2016-01-01", end: "2020-12-31" },
+];
 const CACHE_DIR = path.join(
   GENERATED_DIR,
-  `cache/open-meteo-${MODEL_SLUG}-1981-2010`,
+  `cache/open-meteo-${MODEL_SLUG}-${PERIOD}`,
 );
 const OUTPUT_FILE = path.join(
   GENERATED_DIR,
-  `validacao-inmet-openmeteo-${MODEL_SLUG}-1981-2010.xlsx`,
+  `validacao-inmet-openmeteo-${MODEL_SLUG}-${PERIOD}.xlsx`,
 );
 const PARTIAL_MODE = process.argv.includes("--partial");
 
@@ -101,20 +118,71 @@ function parseModelArg(): (typeof MODEL_CONFIGS)[keyof typeof MODEL_CONFIGS] {
   );
 }
 
+function parseWorstFromModelArg():
+  | (typeof MODEL_CONFIGS)[keyof typeof MODEL_CONFIGS]
+  | null {
+  const rawArg = process.argv
+    .find((arg) => arg.startsWith("--worst-from="))
+    ?.split("=")[1];
+
+  if (!rawArg) {
+    return null;
+  }
+
+  const normalized = rawArg.replace(/-/g, "_");
+  if (normalized === "era5" || normalized === "era5_land") {
+    return MODEL_CONFIGS[normalized];
+  }
+
+  throw new Error(
+    `Modelo inválido em --worst-from: ${rawArg}. Use era5 ou era5_land.`,
+  );
+}
+
+function parseLimitArg(): number | null {
+  const rawArg = process.argv
+    .find((arg) => arg.startsWith("--limit="))
+    ?.split("=")[1];
+
+  if (!rawArg) {
+    return WORST_FROM_MODEL ? 12 : null;
+  }
+
+  const value = Number(rawArg);
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`Limite inválido: ${rawArg}. Use um inteiro maior que zero.`);
+  }
+
+  return value;
+}
+
 async function main() {
+  if (MODEL === "era5_land") {
+    throw new Error(
+      "ERA5-Land não fornece precipitação nem chuva nesta rota do Open-Meteo; a comparação de BH foi suspensa até uma fonte alternativa ser configurada.",
+    );
+  }
   await mkdir(CACHE_DIR, { recursive: true });
   const dataset = await readInmetDataset();
+  const validStations = WORST_FROM_MODEL
+    ? await selectWorstStationsFromReference(dataset.validStations, WORST_FROM_MODEL)
+    : dataset.validStations;
   const comparisons: StationValidationComparison[] = [];
 
   console.log(
     `INMET ${PERIOD}: ${dataset.validStations.length} estações válidas, ${dataset.excludedStations.length} excluídas.`,
   );
+  if (WORST_FROM_MODEL) {
+    console.log(
+      `Amostra crítica: ${validStations.length} estações com maiores divergências no ${WORST_FROM_MODEL.label}.`,
+    );
+  }
 
   const era5Collection = PARTIAL_MODE
-    ? await readCachedEra5InputsByStation(dataset.validStations)
-    : await fetchEra5InputsByStation(dataset.validStations);
+    ? await readCachedEra5InputsByStation(validStations)
+    : await fetchEra5InputsByStation(validStations);
 
-  for (const station of dataset.validStations) {
+  for (const station of validStations) {
     const era5Inputs = era5Collection.inputsByCode.get(station.station.code);
     if (era5Inputs) {
       comparisons.push(compareStationWithEra5(station, era5Inputs));
@@ -122,7 +190,7 @@ async function main() {
   }
 
   const comparedCodes = new Set(comparisons.map((comparison) => comparison.code));
-  const pendingEra5 = dataset.validStations
+  const pendingEra5 = validStations
     .filter((station) => !comparedCodes.has(station.station.code))
     .map((station) => ({
       code: station.station.code,
@@ -135,7 +203,7 @@ async function main() {
 
   const workbook = buildWorkbook({
     comparisons,
-    validStations: dataset.validStations,
+    validStations,
     excludedStations: dataset.excludedStations,
     era5Failures: [...era5Collection.failures, ...pendingEra5],
     totals: dataset.totals,
@@ -144,11 +212,66 @@ async function main() {
   console.log(`Planilha gerada em ${OUTPUT_FILE}`);
 }
 
+async function selectWorstStationsFromReference(
+  stations: InmetValidStation[],
+  referenceModel: (typeof MODEL_CONFIGS)[keyof typeof MODEL_CONFIGS],
+): Promise<InmetValidStation[]> {
+  const comparisons: StationValidationComparison[] = [];
+
+  for (const station of stations) {
+    const cached = await readModelCache(station, referenceModel);
+    if (cached) {
+      comparisons.push(compareStationWithEra5(station, cached.inputs));
+    }
+  }
+
+  if (!comparisons.length) {
+    throw new Error(
+      `Nenhuma estação em cache para montar amostra crítica a partir de ${referenceModel.label}. Rode primeiro a validação desse modelo.`,
+    );
+  }
+
+  const limit = SAMPLE_LIMIT ?? comparisons.length;
+  const selectedCodes = new Set<string>();
+  const addRanked = (
+    getValue: (item: StationValidationComparison) => number | null,
+    maxItems = limit,
+  ) => {
+    let added = 0;
+    for (const entry of comparisons
+      .map((item) => ({ item, value: getValue(item) }))
+      .filter((entry): entry is { item: StationValidationComparison; value: number } =>
+        isNumber(entry.value),
+      )
+      .sort((a, b) => b.value - a.value)) {
+      if (selectedCodes.size >= limit || added >= maxItems) {
+        break;
+      }
+
+      if (!selectedCodes.has(entry.item.code)) {
+        selectedCodes.add(entry.item.code);
+        added += 1;
+      }
+    }
+  };
+
+  const perMetricLimit = Math.max(1, Math.ceil(limit / 3));
+  addRanked((item) => absolute(item.metrics.balanceAnnualDiff), perMetricLimit);
+  addRanked((item) => absolute(item.metrics.precipitationAnnualDiff), perMetricLimit);
+  addRanked((item) => item.metrics.balanceClassDisagreements, perMetricLimit);
+  addRanked((item) => absolute(item.metrics.balanceAnnualDiff), limit);
+
+  const stationByCode = new Map(stations.map((station) => [station.station.code, station]));
+  return [...selectedCodes]
+    .map((code) => stationByCode.get(code))
+    .filter((station): station is InmetValidStation => Boolean(station));
+}
+
 async function readInmetDataset() {
   const [stations, precipitationRecords, temperatureRecords] = await Promise.all([
-    readStations("Estações-Normal-Climatoógica-1981-2010.xlsx"),
-    readMonthlyRecords("30-Precipitação-Acumulada-NCB_1981-2010.xlsx"),
-    readMonthlyRecords("01-Temperatura-Média-Compensada-Bulbo-Seco-NCB_1981-2010.xlsx"),
+    readStations("Normal-Climatologica-ESTAÇÕES.xlsx"),
+    readMonthlyRecords("Normal-Climatologica-PREC.xlsx"),
+    readMonthlyRecords("Normal-Climatologica-TMEDSECA.xlsx"),
   ]);
 
   return buildInmetValidationDataset({
@@ -239,7 +362,7 @@ async function fetchEra5InputsByStation(stations: InmetValidStation[]): Promise<
     `${MODEL_LABEL}: ${inputsByCode.size} estações em cache, ${uncached.length} para baixar.`,
   );
 
-  const chunks = chunk(uncached, 3);
+  const chunks = chunk(uncached, BATCH_SIZE);
   for (const [index, stationsChunk] of chunks.entries()) {
     console.log(
       `[lote ${index + 1}/${chunks.length}] ${MODEL_LABEL} ${stationsChunk
@@ -249,7 +372,7 @@ async function fetchEra5InputsByStation(stations: InmetValidStation[]): Promise<
     try {
       const batchInputs = await fetchEra5Batch(stationsChunk);
       batchInputs.forEach((inputs, code) => inputsByCode.set(code, inputs));
-      await sleep(100);
+      await sleep(DOWNLOAD_DELAY_MS);
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       stationsChunk.forEach((station) => {
@@ -292,10 +415,14 @@ async function readCachedEra5InputsByStation(
 async function fetchEra5Batch(
   stations: InmetValidStation[],
 ): Promise<Map<string, MonthlyInput[]>> {
-  const url = buildEra5Url(stations);
+  if (USE_WINDOWED_FETCH) {
+    return fetchEra5BatchInWindows(stations);
+  }
+
+  const url = buildEra5Url(stations, START_DATE, END_DATE);
   let lastError: unknown;
 
-  for (let attempt = 1; attempt <= 6; attempt += 1) {
+  for (let attempt = 1; attempt <= MAX_FETCH_ATTEMPTS; attempt += 1) {
     try {
       const response = await fetch(url);
       if (!response.ok) {
@@ -356,12 +483,103 @@ async function fetchEra5Batch(
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
-function buildEra5Url(stations: InmetValidStation[]): string {
+async function fetchEra5BatchInWindows(
+  stations: InmetValidStation[],
+): Promise<Map<string, MonthlyInput[]>> {
+  if (stations.length !== 1) {
+    throw new Error("Consulta em janelas exige uma estação por lote.");
+  }
+
+  const station = stations[0];
+  const mergedDaily: DailyClimateSeries = {
+    time: [],
+    temperature_2m_mean: [],
+    precipitation_sum: [],
+  };
+
+  for (const [windowIndex, window] of DATE_WINDOWS.entries()) {
+    const payload = await fetchEra5PayloadWithRetry(
+      buildEra5Url(stations, window.start, window.end),
+    );
+    const locationPayload = Array.isArray(payload) ? payload[0] : payload;
+    if (!locationPayload?.daily) {
+      throw new Error(`${MODEL_LABEL} sem dados diários para ${station.station.code}.`);
+    }
+
+    mergedDaily.time.push(...locationPayload.daily.time);
+    mergedDaily.temperature_2m_mean.push(
+      ...locationPayload.daily.temperature_2m_mean,
+    );
+    mergedDaily.precipitation_sum.push(...locationPayload.daily.precipitation_sum);
+
+    if (windowIndex < DATE_WINDOWS.length - 1) {
+      await sleep(4000);
+    }
+  }
+
+  const aggregation = aggregateDailyClimateToMonthlyNormals(mergedDaily, {
+    requireCompleteMonths: true,
+    effectiveEndDate: END_DATE,
+  });
+
+  if (aggregation.missingMonths.length) {
+    throw new Error(
+      `${MODEL_LABEL} sem meses completos para ${station.station.code}: ${aggregation.missingMonths.join(", ")}`,
+    );
+  }
+
+  const entry: Era5CacheEntry = {
+    code: station.station.code,
+    model: MODEL,
+    period: PERIOD,
+    latitude: station.station.latitude as number,
+    longitude: station.station.longitude as number,
+    inputs: aggregation.inputs,
+    yearsWithData: aggregation.monthly.map((month) => month.yearsWithData),
+    generatedAt: new Date().toISOString(),
+  };
+  await writeEra5Cache(station, entry);
+
+  return new Map([[station.station.code, entry.inputs]]);
+}
+
+async function fetchEra5PayloadWithRetry(url: string): Promise<unknown> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= MAX_FETCH_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Open-Meteo HTTP ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+      const delay = message.includes("429") ? 30000 * attempt : 5000 * attempt;
+      console.warn(
+        `Tentativa ${attempt} falhou para a janela; aguardando ${Math.round(delay / 1000)}s.`,
+      );
+      if (attempt < MAX_FETCH_ATTEMPTS) {
+        await sleep(delay);
+      }
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
+function buildEra5Url(
+  stations: InmetValidStation[],
+  startDate: string,
+  endDate: string,
+): string {
   const query = new URLSearchParams({
     latitude: stations.map((station) => String(station.station.latitude)).join(","),
     longitude: stations.map((station) => String(station.station.longitude)).join(","),
-    start_date: START_DATE,
-    end_date: END_DATE,
+    start_date: startDate,
+    end_date: endDate,
     daily: "temperature_2m_mean,precipitation_sum",
     models: MODEL,
     timezone: "auto",
@@ -1120,6 +1338,19 @@ async function readEra5Cache(
   return readJson<Era5CacheEntry>(path.join(CACHE_DIR, `${cacheKey(station)}.json`));
 }
 
+async function readModelCache(
+  station: InmetValidStation,
+  model: (typeof MODEL_CONFIGS)[keyof typeof MODEL_CONFIGS],
+): Promise<Era5CacheEntry | null> {
+  return readJson<Era5CacheEntry>(
+    path.join(
+      GENERATED_DIR,
+      `cache/open-meteo-${model.slug}-1991-2020`,
+      `${cacheKeyForModel(station, model)}.json`,
+    ),
+  );
+}
+
 async function writeEra5Cache(
   station: InmetValidStation,
   entry: Era5CacheEntry,
@@ -1166,9 +1397,16 @@ function normalizeNumber(value: ExcelJS.CellValue): number | null {
 }
 
 function cacheKey(station: InmetValidStation): string {
+  return cacheKeyForModel(station, SELECTED_MODEL);
+}
+
+function cacheKeyForModel(
+  station: InmetValidStation,
+  model: (typeof MODEL_CONFIGS)[keyof typeof MODEL_CONFIGS],
+): string {
   return [
     station.station.code,
-    MODEL,
+    model.apiValue,
     PERIOD,
     Number(station.station.latitude).toFixed(4),
     Number(station.station.longitude).toFixed(4),

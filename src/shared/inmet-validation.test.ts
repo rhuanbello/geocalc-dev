@@ -74,7 +74,7 @@ describe("INMET validation helpers", () => {
 
     expect(comparison.factorSelection).toEqual({
       hemisphere: "south",
-      latitude: 20,
+      latitude: 15,
     });
     expect(comparison.inmet.result.isComplete).toBe(true);
     expect(comparison.era5.result.isComplete).toBe(true);

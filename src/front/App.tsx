@@ -78,7 +78,6 @@ import {
   getInmetStationByCode,
   inmetStationLabel,
   inmetStationToMonthlyInputs,
-  isInmetNormalPeriod,
   listInmetStations,
   type ClimateDataSource,
   type InmetNormalPeriod,
@@ -194,7 +193,9 @@ export function App() {
   );
   const [sourceState, setSourceState] = useState<SourceState>("manual");
   const [climateDataSource, setClimateDataSource] =
-    useState<ClimateDataSource>("1991-2020");
+    useState<ClimateDataSource>("inmet");
+  const [inmetPeriod, setInmetPeriod] =
+    useState<InmetNormalPeriod>("1991-2020");
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
   const [selectedLocation, setSelectedLocation] =
     useState<LocationSearchResult | null>(null);
@@ -232,14 +233,12 @@ export function App() {
   );
   const selectedInmetStation = useMemo(
     () =>
-      isInmetNormalPeriod(climateDataSource)
-        ? getInmetStationByCode(selectedInmetStationCode, climateDataSource)
+      climateDataSource === "inmet"
+        ? getInmetStationByCode(selectedInmetStationCode, inmetPeriod)
         : null,
-    [climateDataSource, selectedInmetStationCode],
+    [climateDataSource, inmetPeriod, selectedInmetStationCode],
   );
-  const selectedInmetPeriod = isInmetNormalPeriod(climateDataSource)
-    ? climateDataSource
-    : null;
+  const selectedInmetPeriod = climateDataSource === "inmet" ? inmetPeriod : null;
   const effectiveEndDate = useMemo(() => getEffectiveEndDate(endYear), [endYear]);
   const waterBalance = useMemo(
     () => calculateWaterBalance(monthlyInputs, factorSelection),
@@ -299,7 +298,7 @@ export function App() {
   };
 
   const updatePointFromMap = async (point: MapPoint) => {
-    if (isInmetNormalPeriod(climateDataSource)) {
+    if (climateDataSource === "inmet") {
       return;
     }
 
@@ -401,14 +400,14 @@ export function App() {
     setErrorMessage(null);
     setMissingMonths([]);
 
-    if (isInmetNormalPeriod(dataSource)) {
-      const [startYear, endYear] = inmetPeriodYears(dataSource);
+    if (dataSource === "inmet") {
+      const [startYear, endYear] = inmetPeriodYears(inmetPeriod);
       setSelectedInmetStationCode(null);
       setSelectedPoint(null);
       setSelectedLocation(null);
       setMonthlyTextInputs(EMPTY_MONTHLY_TEXT_INPUTS);
       setSourceState("manual");
-      setPeriodPreset(dataSource);
+      setPeriodPreset(inmetPeriod);
       setStartYear(startYear);
       setEndYear(endYear);
       setStatusMessage("Selecione uma estação INMET no mapa ou na busca.");
@@ -421,6 +420,22 @@ export function App() {
     setMonthlyTextInputs(EMPTY_MONTHLY_TEXT_INPUTS);
     setSourceState("manual");
     setStatusMessage("Fonte Open-Meteo selecionada. Busque uma cidade ou clique no mapa.");
+  };
+
+  const updateInmetPeriod = (period: InmetNormalPeriod) => {
+    const [nextStartYear, nextEndYear] = inmetPeriodYears(period);
+    setClimateDataSource("inmet");
+    setInmetPeriod(period);
+    setSelectedInmetStationCode(null);
+    setSelectedPoint(null);
+    setSelectedLocation(null);
+    setPreviewedInmetStation(null);
+    setMonthlyTextInputs(EMPTY_MONTHLY_TEXT_INPUTS);
+    setSourceState("manual");
+    setPeriodPreset(period);
+    setStartYear(nextStartYear);
+    setEndYear(nextEndYear);
+    setStatusMessage("Selecione uma estação INMET no mapa ou na busca.");
   };
 
   const selectInmetStation = (station: InmetNormalStation | null) => {
@@ -438,9 +453,6 @@ export function App() {
       return;
     }
 
-    const inmetPeriod = isInmetNormalPeriod(climateDataSource)
-      ? climateDataSource
-      : "1991-2020";
     const [startYear, endYear] = inmetPeriodYears(inmetPeriod);
     setSelectedInmetStationCode(station.code);
     setSelectedPoint({
@@ -595,6 +607,7 @@ export function App() {
             missingMonths={missingMonths}
             waterBalanceErrors={waterBalance.errors}
             onClimateDataSourceChange={updateClimateDataSource}
+            onInmetPeriodChange={updateInmetPeriod}
             onPointChange={updatePoint}
             onMapPointChange={(point) => void updatePointFromMap(point)}
             onInmetStationChange={selectInmetStation}
@@ -762,6 +775,7 @@ function ClimatePanel({
   missingMonths,
   waterBalanceErrors,
   onClimateDataSourceChange,
+  onInmetPeriodChange,
   onPointChange,
   onMapPointChange,
   onInmetStationChange,
@@ -793,6 +807,7 @@ function ClimatePanel({
   missingMonths: number[];
   waterBalanceErrors: string[];
   onClimateDataSourceChange: (dataSource: ClimateDataSource) => void;
+  onInmetPeriodChange: (period: InmetNormalPeriod) => void;
   onPointChange: (point: MapPoint, location: LocationSearchResult | null) => void;
   onMapPointChange: (point: MapPoint) => void;
   onInmetStationChange: (station: InmetNormalStation | null) => void;
@@ -805,7 +820,7 @@ function ClimatePanel({
   onEndYearChange: (value: number) => void;
   onImportClimate: () => void;
 }) {
-  const isInmetSource = isInmetNormalPeriod(climateDataSource);
+  const isInmetSource = climateDataSource === "inmet";
 
   return (
     <section className="panel climate-panel">
@@ -837,8 +852,8 @@ function ClimatePanel({
                 <button
                   type="button"
                   aria-label="INMET 1991-2020"
-                  className={climateDataSource === "1991-2020" ? "active" : ""}
-                  onClick={() => onClimateDataSourceChange("1991-2020")}
+                  className={selectedInmetPeriod === "1991-2020" ? "active" : ""}
+                  onClick={() => onInmetPeriodChange("1991-2020")}
                 >
                   <span className="source-title">
                     1991-2020
@@ -847,17 +862,25 @@ function ClimatePanel({
                 <button
                   type="button"
                   aria-label="INMET 1981-2010"
-                  className={climateDataSource === "1981-2010" ? "active" : ""}
-                  onClick={() => onClimateDataSourceChange("1981-2010")}
+                  className={selectedInmetPeriod === "1981-2010" ? "active" : ""}
+                  onClick={() => onInmetPeriodChange("1981-2010")}
                 >
                   <span className="source-title">1981-2010</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label="INMET 1961-1990"
+                  className={selectedInmetPeriod === "1961-1990" ? "active" : ""}
+                  onClick={() => onInmetPeriodChange("1961-1990")}
+                >
+                  <span className="source-title">1961-1990</span>
                 </button>
               </div>
             </div>
 
             <button
               type="button"
-              className={`source-option ${climateDataSource === "open-meteo" ? "active" : ""}`}
+              className={`source-option ${isInmetSource ? "" : "active"}`}
               onClick={() => onClimateDataSourceChange("open-meteo")}
             >
               <CloudSun />

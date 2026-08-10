@@ -49,12 +49,21 @@ describe("water balance", () => {
   test("selects the nearest supported latitude by hemisphere", () => {
     expect(nearestFactorSelection(-22.9)).toEqual({
       hemisphere: "south",
-      latitude: 20,
+      latitude: 25,
     });
     expect(nearestFactorSelection(57.5)).toEqual({
       hemisphere: "north",
       latitude: 60,
     });
+    expect(nearestFactorSelection(-22)).toEqual({ hemisphere: "south", latitude: 20 });
+    expect(nearestFactorSelection(-23)).toEqual({ hemisphere: "south", latitude: 25 });
+    expect(nearestFactorSelection(-28)).toEqual({ hemisphere: "south", latitude: 30 });
+  });
+
+  test("interpolates correction factors at five-degree latitudes", () => {
+    expect(getCorrectionFactor(1, { hemisphere: "south", latitude: 0 })).toBe(1);
+    expect(getCorrectionFactor(1, { hemisphere: "south", latitude: 5 })).toBeCloseTo(1.03, 10);
+    expect(getCorrectionFactor(1, { hemisphere: "south", latitude: 15 })).toBeCloseTo(1.095, 10);
   });
 
   test("blocks invalid negative precipitation", () => {

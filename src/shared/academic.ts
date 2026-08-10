@@ -47,7 +47,7 @@ export const REFERENCE_SOURCES: ReferenceSource[] = [
   {
     label: "INMET Normais Climatológicas do Brasil",
     description:
-      "Fonte observacional por estação meteorológica usada quando o usuário seleciona uma estação INMET completa para 1981-2010 ou 1991-2020.",
+      "Fonte observacional por estação meteorológica usada quando o usuário seleciona uma estação INMET completa para 1961-1990, 1981-2010 ou 1991-2020.",
     href: "https://portal.inmet.gov.br/normais",
   },
   {
@@ -100,14 +100,14 @@ export const WATER_BALANCE_METHODOLOGY: MethodologySection[] = [
     title: "Correção de Etp para a latitude",
     body:
       "A equação de Thornthwaite foi proposta para condições padronizadas no Equador, mês de 30 dias e 12 horas de insolação diária. Por isso, a Etp é multiplicada por um fator de correção (FC) associado ao hemisfério, ao mês e à latitude do território considerado.",
-    formulas: ["\\text{Etp corrigida} = Etp * FC = P - \\text{Etp corrigida}"],
+    formulas: ["\\text{Etp corrigida} = Etp * FC", "BH = P - \\text{Etp corrigida}"],
   },
   {
     title: "Superávit (SH) e Déficit (DH) Hídricos",
     body:
-      "Quando o resultado do BH mensal é positivo, há superávit hídrico (SH). Quando é negativo, há déficit hídrico (DH), indicando que a  evapotranspiração superou a entrada de água pela chuva.",
+      "Quando o resultado do BH mensal é positivo, há superávit hídrico (SH). Quando é negativo, há déficit hídrico (DH), indicando que a evapotranspiração superou a entrada de água pela precipitação.",
     formulas: [
-      "SH = \\text{valores positivos de DH}",
+      "SH = \\text{valores positivos de BH}",
       "DH = \\text{valores negativos de BH}",
     ],
   },
@@ -115,32 +115,30 @@ export const WATER_BALANCE_METHODOLOGY: MethodologySection[] = [
     title: "Fontes de dados de precipitação (P) e temperatura (t) para calcular o BH na tabela de cálculo",
     note: "A temperatura é utilizada para o cálculo da Etp.",
     body:
-        "Dados de P e t do INMET por Estação Meteorológica \n" +
-        "A fonte de dados proposta é a das médias mensais mostradas ano-a-ano nas Normais Climatológicas do Instituto Nacional de Meteorologia (INMET): 1961-1990, 1981-2010 e 1991-2020. Quando uma estação INMET é selecionada, a tabela de cálculo do BH recebe diretamente os valores médios mensais de P e t da normal climatológica tomada como período de referência, desde que os dados estejam disponíveis.",
+      "A fonte principal são as Normais Climatológicas do Instituto Nacional de Meteorologia (INMET): 1961-1990, 1981-2010 e 1991-2020. Quando uma estação completa é selecionada, a tabela recebe diretamente os valores mensais de precipitação (P) e temperatura (t) da normal escolhida.",
   },
   {
     title: "Fonte alternativa para os dados de P e t",
     body:
-        "Alternativamente aos dados do INMET, usar as estimativas para as coordenadas de qualquer ponto a partir do Open-Meteo/ERA5.\n" +
-        "O Open-Meteo/ERA5, os dados são diários. No caso da precipitação mensal acumulada, o GeoCalc soma todos os valores diários de chuva daquele mês. No caso da temperatura média mensal, o GeoCalc calcula a média das temperaturas médias diárias registradas naquele mês.",
+      "Quando não houver uma estação INMET adequada, o GeoCalc pode estimar os valores para qualquer coordenada com Open-Meteo/ERA5. A precipitação mensal resulta da soma diária e a temperatura mensal, da média das temperaturas médias diárias.",
   },
   {
-    title: "Normal alternativa ",
+    title: "Normal estimada por coordenada",
     body:
-        "Usando o Open-Meteo/ERA5, o GeoCalc calcula o BH dos meses de cada ano e, assim, pode-se obter uma Normal Climatológica estimada para o território representado pelas coordenadas dos pontos selecionados.",
+      "Para cada mês, o GeoCalc calcula a média dos valores do mesmo mês nos anos completos do período selecionado. Essas normais mensais de P e t são então usadas no cálculo do BH.",
   },
 ];
 
 export const CLIMATE_IMPORT_METHODOLOGY: MethodologySection[] = [
   {
-    title: "Fontes de chuva e temperatura",
+    title: "Fontes de precipitação e temperatura",
     body:
-      "O GeoCalc pode usar estimativas por coordenada da Open-Meteo/ERA5 ou dados observacionais por estação das Normais Climatológicas do INMET, quando disponíveis.",
+      "O GeoCalc prioriza dados observacionais por estação das Normais Climatológicas do INMET. Open-Meteo/ERA5 é uma alternativa para coordenadas sem estação disponível.",
   },
   {
     title: "INMET por estação",
     body:
-      "Quando uma estação INMET é selecionada, a tabela recebe diretamente os valores mensais de precipitação e temperatura da normal climatológica 1981-2010 ou 1991-2020 escolhida para aquela estação.",
+      "Quando uma estação INMET é selecionada, a tabela recebe diretamente os valores mensais de precipitação e temperatura da normal climatológica escolhida para aquela estação.",
   },
   {
     title: "Precipitação mensal",
@@ -156,11 +154,6 @@ export const CLIMATE_IMPORT_METHODOLOGY: MethodologySection[] = [
     title: "Normal do período",
     body:
       "Depois de obter os meses de cada ano, o GeoCalc compara meses iguais no período selecionado: janeiros com janeiros, fevereiros com fevereiros, e assim sucessivamente.",
-  },
-  {
-    title: "Meses incompletos",
-    body:
-      "Quando o ano mais recente ainda não tem um mês completo disponível, esse mês não entra na média. Isso evita que poucos dias de chuva ou temperatura representem um mês inteiro.",
   },
 ];
 
