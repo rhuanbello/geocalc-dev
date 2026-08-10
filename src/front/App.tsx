@@ -741,13 +741,20 @@ function ClimateMethodPanel() {
       <PanelTitle
         icon={<CloudSun className="size-4" />}
         title="Fontes de dados da obtenção da precipitação e temperatura"
-        description="Como chuva e temperatura chegam à tabela mensal usada no balanço hídrico."
+        description="O INMET é a fonte principal por estação; Open-Meteo/ERA5 é a alternativa para coordenadas sem estação disponível."
       />
       <div className="climate-method-grid">
         {CLIMATE_IMPORT_METHODOLOGY.map((section) => (
           <article key={section.title} className="climate-method-card">
             <h3>{section.title}</h3>
             <p>{section.body}</p>
+            {section.formulas?.length ? (
+              <div className="climate-method-card-formulas">
+                {section.formulas.map((formula) => (
+                  <Formula key={formula} latex={formula} className="formula" />
+                ))}
+              </div>
+            ) : null}
           </article>
         ))}
       </div>

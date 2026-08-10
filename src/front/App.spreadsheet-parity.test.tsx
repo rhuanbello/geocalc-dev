@@ -160,9 +160,11 @@ describe("App spreadsheet parity", () => {
     expect(screen.getByText("Conceitos básicos e metodologia")).toBeTruthy();
     expect(screen.getByText("O que é o balanço hídrico")).toBeTruthy();
     expect(screen.getByText("Entrada e saída de água no BH")).toBeTruthy();
-    expect(screen.getByText("Observação")).toBeTruthy();
-    expect(screen.getByText("A temperatura é utilizada para o cálculo da Etp.")).toBeTruthy();
+    expect(screen.getByText("Por que estimar a Etp")).toBeTruthy();
     expect(screen.getByText("Índices na fórmula de Thornthwaite")).toBeTruthy();
+    expect(screen.getByText("Correção de Etp para a latitude")).toBeTruthy();
+    expect(screen.getByText("Superávit (SH) e Déficit (DH) Hídricos")).toBeTruthy();
+    expect(container.querySelectorAll(".methodology-card")).toHaveLength(6);
     expect(screen.queryByText("Vazão como aplicação futura")).toBeNull();
     expect(container.querySelector(".methodology-formula-block")).toBeNull();
     const renderedFormulas = Array.from(
@@ -181,15 +183,12 @@ describe("App spreadsheet parity", () => {
     );
     expect(screen.getAllByText(/Thornthwaite/).length).toBeGreaterThan(0);
     expect(
-      screen.getByText(
-        "Fontes de dados de precipitação (P) e temperatura (t) para calcular o BH na tabela de cálculo",
-      ),
+      screen.getByText("Fontes de dados da obtenção da precipitação e temperatura"),
     ).toBeTruthy();
-    expect(screen.getByText("Precipitação mensal")).toBeTruthy();
-    expect(screen.getByText("Temperatura mensal")).toBeTruthy();
-    expect(screen.getByText("Normal do período")).toBeTruthy();
+    expect(screen.getByText("INMET por estação")).toBeTruthy();
+    expect(screen.getByText("Open-Meteo/ERA5 por coordenada")).toBeTruthy();
     expect(screen.getByText("Normal estimada por coordenada")).toBeTruthy();
-    expect(screen.getAllByText(/dados diários/).length).toBeGreaterThan(0);
+    expect(container.querySelectorAll(".climate-method-card")).toHaveLength(3);
     expect(screen.getByText("Referências e fontes")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Open-Meteo Historical Weather API" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "INMET Normais Climatológicas do Brasil" })).toBeTruthy();

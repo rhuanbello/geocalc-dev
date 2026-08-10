@@ -111,49 +111,31 @@ export const WATER_BALANCE_METHODOLOGY: MethodologySection[] = [
       "DH = \\text{valores negativos de BH}",
     ],
   },
-  {
-    title: "Fontes de dados de precipitação (P) e temperatura (t) para calcular o BH na tabela de cálculo",
-    note: "A temperatura é utilizada para o cálculo da Etp.",
-    body:
-      "A fonte principal são as Normais Climatológicas do Instituto Nacional de Meteorologia (INMET): 1961-1990, 1981-2010 e 1991-2020. Quando uma estação completa é selecionada, a tabela recebe diretamente os valores mensais de precipitação (P) e temperatura (t) da normal escolhida.",
-  },
-  {
-    title: "Fonte alternativa para os dados de P e t",
-    body:
-      "Quando não houver uma estação INMET adequada, o GeoCalc pode estimar os valores para qualquer coordenada com Open-Meteo/ERA5. A precipitação mensal resulta da soma diária e a temperatura mensal, da média das temperaturas médias diárias.",
-  },
-  {
-    title: "Normal estimada por coordenada",
-    body:
-      "Para cada mês, o GeoCalc calcula a média dos valores do mesmo mês nos anos completos do período selecionado. Essas normais mensais de P e t são então usadas no cálculo do BH.",
-  },
 ];
 
 export const CLIMATE_IMPORT_METHODOLOGY: MethodologySection[] = [
   {
-    title: "Fontes de precipitação e temperatura",
-    body:
-      "O GeoCalc prioriza dados observacionais por estação das Normais Climatológicas do INMET. Open-Meteo/ERA5 é uma alternativa para coordenadas sem estação disponível.",
-  },
-  {
     title: "INMET por estação",
     body:
-      "Quando uma estação INMET é selecionada, a tabela recebe diretamente os valores mensais de precipitação e temperatura da normal climatológica escolhida para aquela estação.",
+      "A fonte principal são as Normais Climatológicas do INMET: 1961-1990, 1981-2010 e 1991-2020. Ao selecionar uma estação completa, a tabela recebe diretamente os valores mensais de precipitação (P) e temperatura (t) da normal escolhida.",
   },
   {
-    title: "Precipitação mensal",
+    title: "Open-Meteo/ERA5 por coordenada",
     body:
-      "A precipitação vem dia a dia. Para representar um mês, o GeoCalc soma todos os valores diários de chuva daquele mês, chegando à precipitação mensal acumulada.",
+      "Quando não houver uma estação INMET adequada, o GeoCalc pode estimar os valores para qualquer coordenada. Para cada mês, a precipitação é obtida pela soma diária e a temperatura, pela média das temperaturas médias diárias.",
+    formulas: [
+      "P_{mensal} = \\sum P_{dia}",
+      "t_{mensal} = \\overline{t_{dia}}",
+    ],
   },
   {
-    title: "Temperatura mensal",
+    title: "Normal estimada por coordenada",
     body:
-      "A temperatura também vem dia a dia. Para representar um mês, o GeoCalc calcula a média das temperaturas médias diárias registradas naquele mês.",
-  },
-  {
-    title: "Normal do período",
-    body:
-      "Depois de obter os meses de cada ano, o GeoCalc compara meses iguais no período selecionado: janeiros com janeiros, fevereiros com fevereiros, e assim sucessivamente.",
+      "Nos anos completos do período selecionado, o GeoCalc reúne meses equivalentes: janeiros com janeiros, fevereiros com fevereiros e assim sucessivamente. As normais mensais de P e t resultantes são usadas no cálculo do BH.",
+    formulas: [
+      "P_{normal} = \\overline{P_{mensal}}",
+      "t_{normal} = \\overline{t_{mensal}}",
+    ],
   },
 ];
 
