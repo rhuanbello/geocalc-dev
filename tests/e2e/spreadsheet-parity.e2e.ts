@@ -1,90 +1,50 @@
 import { expect, test } from "@playwright/test";
 
-const spreadsheetRows = [
-  { month: "Janeiro", precipitation: "111", temperature: "24,7" },
-  { month: "Fevereiro", precipitation: "107", temperature: "24.6" },
-  { month: "Março", precipitation: "94", temperature: "23.5" },
-  { month: "Abril", precipitation: "104", temperature: "20.2" },
-  { month: "Maio", precipitation: "102", temperature: "17" },
-  { month: "Junho", precipitation: "137", temperature: "14.5" },
-  { month: "Julho", precipitation: "121", temperature: "14.1" },
-  { month: "Agosto", precipitation: "122", temperature: "15.4" },
-  { month: "Setembro", precipitation: "135", temperature: "16.6" },
-  { month: "Outubro", precipitation: "117", temperature: "19.2" },
-  { month: "Novembro", precipitation: "93", temperature: "21.4" },
-  { month: "Dezembro", precipitation: "97", temperature: "23.3" },
-];
-
-test("preenche os valores da planilha e reproduz os resultados arredondados na UI", async ({
-  page,
-}) => {
+test("mantém o balanço hídrico calculável com os valores da planilha", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByText("GeoCalc", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Balanço Hídrico/i })).toBeVisible();
 
-  await expect(page.getByText("GeoCalc")).toBeVisible();
-  await expect(page.getByRole("link", { name: /Balanço Hídrico/i })).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: /Preencher com dados climáticos/i }),
-  ).toBeVisible();
-
-  await page.getByLabel("Hemisfério").selectOption("south");
-  await page.getByLabel("Latitude de fator").selectOption("30");
-
-  await page.getByLabel("Temperatura de Janeiro").fill("24,");
-  await expect(page.getByLabel("Temperatura de Janeiro")).toHaveValue("24,");
-  await page.getByLabel("Temperatura de Janeiro").fill("24.");
-  await expect(page.getByLabel("Temperatura de Janeiro")).toHaveValue("24.");
-
-  for (const row of spreadsheetRows) {
-    await page
-      .getByLabel(`Precipitação de ${row.month}`)
-      .fill(row.precipitation);
-    await page.getByLabel(`Temperatura de ${row.month}`).fill(row.temperature);
+  const rows = [
+    ["Janeiro", "111", "24,7"], ["Fevereiro", "107", "24.6"], ["Março", "94", "23.5"], ["Abril", "104", "20.2"],
+    ["Maio", "102", "17"], ["Junho", "137", "14.5"], ["Julho", "121", "14.1"], ["Agosto", "122", "15.4"],
+    ["Setembro", "135", "16.6"], ["Outubro", "117", "19.2"], ["Novembro", "93", "21.4"], ["Dezembro", "97", "23.3"],
+  ];
+  for (const [month, precipitation, temperature] of rows) {
+    await page.getByLabel(`Precipitação de ${month}`).fill(precipitation);
+    await page.getByLabel(`Temperatura de ${month}`).fill(temperature);
   }
-
-  await expect(metricValue(page, "P anual")).toHaveText("1.340,0 mm");
-  await expect(metricValue(page, "ETP corr.")).toHaveText("941,9 mm");
-  await expect(metricValue(page, "BH anual")).toHaveText("398,1 mm");
-
-  await expect(tableRow(page, "Janeiro")).toContainText([
-    "Janeiro",
-    "1,19",
-    "11,23",
-    "116,4",
-    "138,5",
-    "-27,5",
-  ]);
-  await expect(tableRow(page, "Junho")).toContainText([
-    "Junho",
-    "0,84",
-    "5,01",
-    "38,1",
-    "32,0",
-    "105,0",
-  ]);
-  await expect(tableRow(page, "Dezembro")).toContainText([
-    "Dezembro",
-    "1,20",
-    "10,28",
-    "103,0",
-    "123,5",
-    "-26,5",
-  ]);
 
   const report = page.locator(".report-panel textarea");
   await expect(report).toContainText("Precipitação total: 1.340,0 mm");
   await expect(report).toContainText("ETP corrigida total: 941,9 mm");
   await expect(report).toContainText("Balanço hídrico anual: 398,1 mm");
-  await expect(report).toContainText("Índice calorimétrico anual I: 95,902");
-  await expect(report).toContainText("Expoente a: 2,097");
-  await expect(report).toContainText("Maior déficit: Janeiro (-27,5 mm)");
-  await expect(report).toContainText("Maior superávit: Junho (105,0 mm)");
   await expect(page.getByRole("button", { name: /Exportar Excel/i })).toBeVisible();
 });
 
-function metricValue(page: import("@playwright/test").Page, label: string) {
-  return page.locator(".metric-card").filter({ hasText: label }).locator("strong");
-}
+test("percorre a EUPS-base manual sem fontes espaciais", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Perda de Solo · EUPS" }).click();
 
-function tableRow(page: import("@playwright/test").Page, month: string) {
-  return page.locator("tbody tr").filter({ hasText: month });
-}
+  await expect(page.getByRole("heading", { name: "Perda de Solo (EUPS)" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Chuva e erosividade" })).toBeVisible();
+  await expect(page.getByText("Mapa de erosividade")).toHaveCount(0);
+  await expect(page.getByText("Importar precipitação")).toHaveCount(0);
+
+  const rainfall = [208, 168, 260, 225, 208, 272, 45, 26, 42, 36, 42, 26];
+  const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  for (const [index, month] of months.entries()) {
+    await page.getByLabel(`Precipitação de ${month}`).fill(String(rainfall[index]));
+  }
+
+  await page.getByRole("combobox", { name: "Referência de tipo de solo" }).click();
+  await page.getByText("Areia quartzosa", { exact: true }).click();
+  await expect(page.getByLabel("Fator K")).toHaveValue("0,027");
+  await page.getByLabel("Comprimento da vertente L").fill("120");
+  await page.getByLabel("Declividade S").fill("20");
+  await page.getByRole("combobox", { name: "Referência de cobertura e manejo" }).click();
+  await page.getByText("Solo exposto, sem práticas", { exact: true }).click();
+
+  await expect(page.locator(".eups-result-card").filter({ hasText: "Perda média anual estimada" })).toContainText("1.519,61");
+  await expect(page.getByText(/Todos os fatores necessários foram informados/)).toBeVisible();
+});

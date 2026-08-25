@@ -34,25 +34,6 @@ mock.module("@/components/MapPicker", () => ({
   ),
 }));
 
-mock.module("@/components/EupsMapPicker", () => ({
-  EupsMapPicker: ({
-    onPointChange,
-    onSlopeLineChange,
-  }: {
-    onPointChange: (point: { latitude: number; longitude: number }) => void;
-    onSlopeLineChange: (points: Array<{ latitude: number; longitude: number }>) => void;
-  }) => (
-    <div>
-      <button type="button" onClick={() => onPointChange({ latitude: -22.9, longitude: -43.1 })}>
-        Selecionar ponto EUPS
-      </button>
-      <button type="button" onClick={() => onSlopeLineChange([{ latitude: -22.9, longitude: -43.1 }, { latitude: -22.9, longitude: -43.099 }])}>
-        Medir vertente EUPS
-      </button>
-    </div>
-  ),
-}));
-
 mock.module("recharts", () => {
   const passthrough =
     (name: string) =>
@@ -429,9 +410,32 @@ describe("App spreadsheet parity", () => {
 
     await user.click(screen.getByRole("button", { name: "Perda de Solo · EUPS" }));
     expect(screen.getByRole("heading", { name: "Perda de Solo (EUPS)" })).toBeTruthy();
-    expect(screen.getByText("Equação Universal de Perda de Solo")).toBeTruthy();
+    expect(screen.getByText("Uma etapa do fluxo geoquímico")).toBeTruthy();
+    expect(screen.getByText("Chuva e erosividade")).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Referência de tipo de solo" })).toBeTruthy();
     expect(screen.getByLabelText("Cobertura, manejo e conservação")).toBeTruthy();
     expect(screen.getByText("Potencial natural de erosão")).toBeTruthy();
+    expect(screen.queryByText("Mapa de erosividade")).toBeNull();
+    expect(screen.queryByText("Importar precipitação")).toBeNull();
+  });
+
+  test("aplica referências didáticas de K e CP sem preencher fatores espaciais", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solo · EUPS" }));
+
+    await user.click(screen.getByRole("combobox", { name: "Referência de tipo de solo" }));
+    await user.click(screen.getByText("Areia quartzosa"));
+    expect((screen.getByLabelText("Fator K") as HTMLInputElement).value).toBe("0,027");
+
+    await user.click(screen.getByRole("combobox", { name: "Referência de cobertura e manejo" }));
+    await user.click(screen.getByText("Floresta nativa"));
+    expect((screen.getByLabelText("Cobertura, manejo e conservação") as HTMLInputElement).value).toBe("0,01");
+
+    await user.click(screen.getByRole("combobox", { name: "Referência de tipo de solo" }));
+    await user.click(screen.getByText("Latossolo V-A"));
+    expect((screen.getByLabelText("Fator K") as HTMLInputElement).value).toBe("");
+    expect(screen.getByText(/Faixa de referência: 0,013 a 0,020/)).toBeTruthy();
   });
 
   test("usa linhas para precipitacao e ETP e barras para BH", () => {

@@ -15,7 +15,6 @@
     "validate:inmet:partial": "bun run scripts/generate-inmet-validation.ts --partial",
     "validate:inmet:era5-land": "bun run scripts/generate-inmet-validation.ts --model=era5_land",
     "validate:inmet:era5-land:partial": "bun run scripts/generate-inmet-validation.ts --model=era5_land --partial",
-    "probe:eups-spatial": "bun run scripts/probe-eups-spatial-sources.ts",
     "preview": "vite preview",
     "test": "bun test src",
     "test:e2e": "playwright test"
@@ -52,7 +51,6 @@
     "@types/leaflet": "^1.9.21",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "geotiff": "^3.0.5",
     "typescript": "^7.0.2",
     "xlsx": "^0.18.5"
   }
