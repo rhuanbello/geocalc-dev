@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-08-23T16:12:37.379Z",
+  "embrapa": {
+    "reachable": false,
+    "candidates": [],
+    "error": "The operation timed out."
+  },
+  "topodata": [
+    {
+      "point": {
+        "name": "Brasília, DF",
+        "latitude": -15.7939,
+        "longitude": -47.8828
+      },
+      "asset": "https://data.inpe.br/bdc/data/topodata/v001/15S/48_/15S48_SN.tif",
+      "slopePercent": 7.672187805175781,
+      "noData": false
+    },
+    {
+      "point": {
+        "name": "Niterói, RJ",
+        "latitude": -22.8832,
+        "longitude": -43.1034
+      },
+      "asset": "https://data.inpe.br/bdc/data/topodata/v001/22S/435/22S435SN.tif",
+      "slopePercent": 25.520824432373047,
+      "noData": false
+    },
+    {
+      "point": {
+        "name": "Bauru, SP",
+        "latitude": -22.3151,
+        "longitude": -49.0581
+      },
+      "asset": "https://data.inpe.br/bdc/data/topodata/v001/22S/495/22S495SN.tif",
+      "slopePercent": 5.281968116760254,
+      "noData": false
+    }
+  ]
+}

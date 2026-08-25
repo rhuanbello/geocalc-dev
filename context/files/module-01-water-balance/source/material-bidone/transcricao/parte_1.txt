@@ -1,0 +1,179 @@
+(Transcrito por TurboScribe. Atualize para Ilimitado para remover esta mensagem.)
+
+Tá tudo certo. Estamos aqui, né? Isso que importa. É isso.
+
+Então, e aí? Então, a gente, nesses últimos dias, a gente trabalhou um pouco... Bom, na verdade, vamos começar do onde tem que começar, né? Então, eu e o Juan, a gente sentou, a gente conversou primeiro e a gente decidiu que a gente vai dar partida por cada caixinha daquela, por cada aba do documento do Excel. Então, a ideia é a gente iniciar um daquelas pastas de cálculo, aí a gente traz um produto, te mostra para você ver o que precisa ajustar, o que precisa melhorar, e a cada encontro a gente discute isso e vê o que precisa ser reparado e também já pensa num possível próximo passo, que seria uma outra janela para poder ser executada. Aí, nesses últimos dias, a gente focou na janela do balanço hídrico, que, na verdade, é a primeira, né? Que tem aquela de apresentação, aí tem o... O fluxograma.
+
+O fluxograma e a terceira já é o balanço hídrico. Aí, a gente focou nessa do balanço hídrico e a gente vai te mostrar o produto que a gente conseguiu fazer nesses últimos dias. Está ótimo.
+
+Então, vai ser janela para janela, né? Isso. Isso. Aí, a gente vai validando, corrigindo, vendo o que falta, vendo o que pode possivelmente estar errado.
+
+Está funcionando assim. Então, esse aqui já é o site, ele está no ar, está no endereço meu, mas a gente pode, depois, no futuro, evoluir para ter um endereço próprio, né? Mas, por enquanto, isso aqui já é o suficiente para a gente conseguir acessar e analisar. Então, a gente pegou as cores da identidade visual aqui da Geoquímica, né? Do site da Geoquímica.
+
+Eu falei para ele como vai ser do curso de pós-graduação. Eu falei, vamos pegar um pouco da identidade visual do próprio site para facilitar a gente e também ficar semelhante à identidade visual do site da Geoquímica. Então, você vai ver bem, as cores são semelhantes, a ponte.
+
+A gente colocou a logo lá em cima também, que é a logo oficial, né? Está na planilha também, a gente pegou de lá. Então, a gente até batizou o projeto. Improvisoriamente.
+
+A gente está chamando ele de geocalque. Geocalque. Geocalque.
+
+De cálculo. É só uma ideia inicial. Ah, ok, ok.
+
+Já está presente aqui também no site. Enfim, aqui a gente tem o conteúdo principal do site. Então, aqui o título Balanço Hídrico, que foi aquela aba da planilha que a gente trabalhou nesses dias.
+
+E aqui a gente basicamente replicou a mesma ideia da planilha. Todas as fórmulas que constam lá e todos os campos de entrada que existem. E aí a gente trouxe para cá e com isso a gente também melhorou em alguns aspectos para ferramentas que a gente tem acesso fora da planilha.
+
+Por exemplo, essa questão do mapa. Lá parece que a gente tinha uma coordenada que estava fixa. Parece até que era de Porto Alegre, aquilo que a gente viu.
+
+Era porque era exemplo. Exemplo, né? Na realidade, aquela planilha é para as pessoas usarem. Elas que vão botar as coordenadas.
+
+Aí a gente implementou esse mapa onde a ideia é a gente conseguir navegar pelo mapa ou digitar aqui o endereço. Então, por exemplo, posso digitar aqui Rio de Janeiro, ele já vai buscar e a gente pode selecionar. Então a ideia é a gente conseguir buscar pelo mapa as coordenadas para a gente dar início ao cálculo.
+
+Ah, e aquela planilha, ela... Claro, se tem... Porque ali a gente entra só com a coordenada da latitude, não é isso? Isso. Só a latitude. Selecionava... Você preenchia se era norte ou sul.
+
+Aí já estava tabelado os graus de norte e sul. E a gente até deixou aqui em cima também. Você vai ver nesses fatores de correção aqui em cima.
+
+A gente deixou essa possibilidade também de selecionar o hemisfério e a latitude em grau. Ele já consegue identificar qual é o hemisfério e a latitude de fator aproximada com base no local que você seleciona? No mapa ou digitando ali na busca? É como a gente colocou o Rio de Janeiro, ele já colocou aqui que é o hemisfério sul e latitude de fator 20 graus. Mas isso é possível de ser alterado.
+
+Se a gente quiser, a gente pode vir aqui e trocar para norte. E também alterar o fator. Igual a gente tem na planilha.
+
+Ótimo! E aqui, essa ideia de início e fim basicamente ele vai sugerir aqui o ano de 1990 e fim como o ano atual. Então aqui está 1990 até 2026. Aqui a ideia é que ele está consumindo de um serviço que a gente pode falar depois onde nesse serviço ele consegue buscar todos os meses nesse intervalo de anos com dados reais.
+
+Mas tem isso? Sim! Então aqui a gente selecionou, por exemplo, o Rio de Janeiro. Aqui a data vai ficar 90 até 2026. E aí a gente consegue vir aqui e clicar em preencher com dados climáticos.
+
+E ele vai importar os dados para essa grande tabela, mês a mês. E aqui é a mesma tabela que a gente tem... E onde é que vocês... Esse banco de dados do 1990 até 2026? Porque isso aqui, pelo que eu entendi, nessa tabela, isso aqui é o valor médio, né? Isso! Ele está usando esse banco de dados para ele conseguir saber a precipitação e a temperatura do local que a gente fornece nessas datas, nesse intervalo de anos. E aí ele traz a média aqui de todo esse período e já preenche automaticamente aqui nessa tabela de cálculo.
+
+Perfeito! E ele busca onde? Aí sobre esse serviço, desse banco de dados que a gente está usando, ele se chama OpenMeetYou. OpenMeetYou. É um serviço gratuito.
+
+Gratuito, né? É gratuito, é americano, se eu não me engano. E aqui a gente tem muitas informações, muitas informações mesmo. Muito legal! Que achado bacana, né? É, e aqui a gente consegue, depois eu vou até passar o link, a gente consegue ter muitas informações aqui.
+
+Qualidade do ar, mudança climática, mudança de maré também. Tem de maré também? Tem. Depois a gente conversa e... Não agora.
+
+Isso aqui eu conheci porque eu trabalhei num projeto agro que era basicamente para fornecer algumas previsões, alguns climas, informação sobre o solo para o pessoal da pecuária. Então a gente tinha que usar muito esse serviço aqui, aí foi onde eu conheci. Nossa, que legal, cara! Eu não conhecia.
+
+Muito bacana! Por que eles estão falando em pricing? É, aqui eu estou até vendo para a gente ter a certeza que é gratuito, mas aqui ele está dizendo que só daqui a um milhão de chamadas que ele vai começar a cobrar, mas para chegar nesse nível vai ser difícil. Vamos supor que se o nosso... Se a nossa plataforma ela for certa, pode ser que um milhão... É, conforme for utilizando ao longo do tempo. Mas para chegar nesse nível de chamada aqui, pela minha experiência, é bem difícil.
+
+Tem projetos realmente já avançados, mas aqui é 29 euros por mês. É bom a gente saber disso, né? Sim. Porque o 99 ali te dá uma falta de 5 milhões.
+
+Isso, isso. Teria que ter 5 milhões de usuários na nossa plataforma. É, essas aqui são a pay calls que ele está chamando, são chamadas no serviço.
+
+Então toda vez que a gente vem aqui e clica para ele calcular, é uma chamada. Então não é que eu tratei isso muito, mas... Porque tem gente que vai ficar brincando ainda. É, isso sim.
+
+E nós não temos limite. Nós não temos como impor o limite. Dá para impor o limite, sim.
+
+Inclusive eles vão ter esse controle também do lado deles para não deixar isso virar brincadeira. Nesse sentido, a gente não pode... Então isso é importante. Eu não sei que tipo de limite que se coloca.
+
+Como é que... Como é que você consegue colocar um limite? Entendi. Dá para fazer de diversas formas. A gente pode ver, por exemplo, se o usuário clicar aqui, muitas vezes a gente pode bloquear o botão.
+
+A gente também pode fazer um limite diário. Um limite por hora. Dá para pensar de diversas formas.
+
+Se é algo para pensar bem no futuro. Já não sair de cara. Isso, exatamente.
+
+E a gente vai usar outros serviços. Muito provavelmente. Não só esse aqui, dependendo do que a gente não der a mão.
+
+Esse ficou muito bom porque, na realidade, eu tinha pensado da gente... Nós teríamos que acessar os dados das climáticas meteorológicas. Mas aí você já tem... Muito legal. Agora, isso tudo nós temos que deixar muito claro, da Palha e da Fonte.
+
+Uma coisa que eu queria dizer é que, acompanhando esta janela, tem que ir o texto, entendeu? Porque tudo isso aqui foi inspirado nas planilhas, nas apostilas que eu tinha, que eu dava aula. Então, para a pessoa não entrar aqui e não saber nada sobre isso, a ideia é ser uma coisa didática. Então, nós vamos associar a cada planilha, vai ter um texto explicativo do que se sabe.
+
+O que é um palácio hídrico, a transpiração potencial, a pluviosidade, menos a transpiração potencial, quem é que colou essas fórmulas, dar os créditos à autoria, a quem de fato inspirou. Aonde nós tiramos, colocar referência bibliográfica, tudo isso. Então, vai ser a planilha e isso aí eu não sei como iria.
+
+Iria associado, mas tem que dar uma pensada e ver se de repente é um hiperlink. Mas não é isso, não fica assim, é um planilha com a explicação dela, com a parte didática. Sim, a gente até pensou um pouco nisso, a gente até já fez algumas coisas aqui que dá para a gente mostrar.
+
+Mas, voltando a onde a gente estava. Então, aqui a gente selecionou o local no mapa, basicamente para a gente pegar as coordenadas, esse serviço do mapa já é uma outra plataforma que a gente está usando, que é essa aqui, OpenStreet, que também é gratuito. E também é esse OpenStreet aqui.
+
+Então, a gente colocou isso aqui dentro do site. Muito legal. Então, basicamente a gente seleciona o local ou no mapa, eu posso vir aqui por exemplo, colocar aqui pilotas no Rio Grande do Sul, ele já está selecionado e eu vim aqui e preencho com os dados. 
+
+Então, eu vou acessar o serviço agora da OpenMeet para buscar as informações de 1990 até 2026. E ele já vai trazer aqui a precipitação e a temperatura. Colocando os valores aqui, ele já vai conforme as fórmulas que estavam na planilha, já fazer o cálculo de tudo. 
+
+Então, aqui é o balanço hídrico, o ETP corrigido. É o índice calorimétrico mensal. Esse I aqui.
+
+A gente colocou uma legenda aqui embaixo para ele abaixar um pouco. Ele vai ter uma legenda de cada sigla que a gente usou ou letra. Maravilha.
+
+Muito legal. E aqui a gente tem o gráfico. Ficou bacana, hein? Ficou bem legal, né? Isso é de pilotas? Isso.
+
+Bota um outro aí só para a gente ver como é que transforma. Bota Boa Vista. O Boa Vista é bem legal.
+
+Bate certinho com o que a gente vive lá. Ainda vai mudar ainda. A época da seca e a época da cheia.
+
+E que eu vejo que coisa interessante, né? Eu vejo que quando fala de temperatura a transpiração ela é uma linha que varia muito pouco, não é verdade? Sim. O que varia é a fluosidade. O verde é a fluosidade que eu estou entendendo.
+
+O verde é o balanço hídrico. Não, não. O verde, quem é o verde? O verde é o balanço hídrico.
+
+Não acho. E o azul é a precipitação. Ah, o azul é a precipitação? É. Vamos ter que inverter isso aí.
+
+Tá. Vamos discutir isso. Porque normalmente, quando a gente faz o balanço hídrico a gente deixa, a gente coloca as linhas, uma para a fluosidade e a outra para a transpiração potencial.
+
+Isso por convenção, praticamente. Ah, entendi. Não está escrito lá na BNDES mas normalmente é o padrão.
+
+O balanço hídrico é o que iria nas balas. Tá. A gente consegue mudar.
+
+Perfeito. Muito bacana. Então, deixa eu só ver a fluosidade aí no caso a precipitação está sendo o azul.
+
+E a transpiração ela praticamente não muda. Sim. Ela fica ali.
+
+Sim. A variação é muito pouca. Porque ela depende da temperatura.
+
+E a temperatura lá é sempre quente. Então... Pode escorrer muito, muito, muito quente ou muito, muito quente. É, a diferença é só que é um quente úmido ou um quente seco.
+
+Não tem muito correto. Pode escorrer. Aqui embaixo a gente colocou um texto.
+
+Aqui é a tentativa de a gente conseguir explicar de forma resumida num texto, tudo que foi calculado e as fontes que foram usadas e a gente disponibilizar isso aqui numa exportação Excel. Então, a gente fez todo esse preenchimento de Boa Vista que calculou todos os dados aqui para a gente automaticamente e a gente pode vir aqui em exportar Excel que ele vai trazer para a gente a versão já na planilha. Que maravilha! Mas para quê que a gente faria? Faria no sentido contrário, então? Isso.
+
+Aí o produto seria o quê? Qual seria o produto? O produto seria aquilo que vocês mostraram, né? Sim, a plataforma. Mas tendo a possibilidade também da gente salvar isso aqui, sabe? A gente pode salvar e carregar. É, salvar e guardar.
+
+Ah, salvar e botar num trabalho, por exemplo, a tabela. Ah, entendi. Ele já vai trazer aqui o local que foi usado em Boa Vista, né? As coordenadas, o período.
+
+Aqui a fonte de dados, que é o OpenMeet. Ele vai fazer aqui um resumo e também a tabela de cálculo. Certo.
+
+E aqui uma legenda. Ele só não consegue fazer o gráfico, mas ele deixa uma tabelinha que você consegue fazer o gráfico depois, entendeu? Pois é, agora, na hora que vocês mudarem isso aqui vai mudar automaticamente, né? Não, aí a gente tem que novamente exportar. Ah, do gráfico, né? Ah, sim, sim.
+
+Sim, também tem que alterar. Deixa eu ver de novo aquela caixinha que vocês explicam coisas ali. Aqui as coordenadas, tem até base de cálculo fornecido.
+
+Não, não. É isso que nós vamos ter que, é isso que nós vamos ter que colocar assim bem, sabe? Bem, bem assim, né? De acordo com a literatura, né? Isso, isso que eu estou dizendo. Porque, na realidade, foi uma fostila que eu fiz.
+
+E essa fostila, eu me basei no motor, entende? Então, é esse que tem que ir, entende? Depois a, digamos assim, a autoria, digamos, dessas coisas todas seremos nós, entende? Quer dizer, então, agora, isso que nós estamos mostrando aqui, esse modelo, com as equações, nós vamos colocar muito corretamente, né? Da mesma forma, eu não sei como seria, seria a fonte de dados, né? Fonte de, sei lá, teria que colocar, aqui nós temos duas, a fonte do texto em si, do texto didático que explica o que é uma lanterna, etc. Tal é uma coisa, né? Perfeito. A outra são as fontes dos dados aonde tu fosse tirar, digamos, aquele site americano.
+
+Isso, é aqui, né? Fonte dos dados, open link. Isso tem que botar direitinho, inclusive, depois, como é que a gente faria isso? A gente botaria direto aí, e colocando, inclusive, como se fosse uma intervenção, tipo, o cara botar http... Para ele acessar e conhecer, né? E dizer acessado em não sei quando, né? Não precisa fazer isso, eu não entendo. Eu não entendo.
+
+Aqui, é suficiente a gente estar dizendo o que a gente está usando, né? Então, aqui, justamente, no botão que a gente chama o serviço deles, a gente está dizendo, usa Open Meeting para calcular médias mensais do período selecionado. Então, aqui, a gente está dando os créditos devidos. E aqui, a mesma coisa no mapa, né? Então, aqui, no mapa, a gente está deixando aqui claro de quem pertence esse mapa.
+
+Aí, quando o cara clicar, ele vai entrar no site do mapa e desse site americano, não vai? É, hoje não, mas é possível deixar esse texto aqui clicável para ele acessar. Esse aqui também. Porque, na realidade, é preciso a gente dizer... Nós dizemos o nome, mas é preciso dizer, também, os dados dos sites, né? O endereço.
+
+A gente vai ter que... Perfeito. Da mesma forma, eu não sei, por exemplo, essa formulação foi tirada... Eu fiz uma fauxila em que eu me basei num autor, num trabalho, que é o mais... E aí, eu não sei onde é que tu acha que isso deveria ir. A gente está exibindo isso em alguns pontos, hoje, aqui na plataforma.
+
+Nesse relatório didático. Então, a gente pode, talvez, pensar... Ah, relatório didático. Talvez a gente pudesse colocar, digamos assim, texto básico.
+
+Sei lá, uma coisa desse tipo, né? Poderia. A gente pode pensar num modelo, né? Sim. Já deixar padronizado para todas as abas.
+
+Isso. Exatamente. Então, acho que tem que ser, assim, um texto básico.
+
+Tem uns textos que vão ser baseados num único autor, mas tem outros em que o cara... Vão ter, sei lá, duas referências em mente, né? Então, eu não sei se a gente coloca de cara aqui. Eu acho que pode ir, né? Eu não sei. Eu não sei como é que é o... E também, o jeito que está.
+
+Está tão bacana. Cargar demais, às vezes, é ruim. É, a gente pode deixar um outro, já, bem mais, talvez, complexo, né? Que não seja tão resumido quanto esse.
+
+Só de referências, realmente. Não, mas, assim, eu achei maravilhoso, Eu achei fantástico. Eu não achei que fosse ficar tão bom assim.
+
+Eu me refiro à questão dos créditos. Então, lá tu colocaste o site americano. Ok.
+
+Agora, ou a gente coloca do lado do site americano e tem que que o cara clica em cima e ele vai direto pra lá e daí, eu não sei qual é o risco que se corta da gente... Eu não sei o que foi. As regras pra isso, né? Como se fosse um idling, que é um negócio desse tipo, né? Eu não sei qual é o risco que se corta. Ou a gente simplesmente deixa anunciada, digamos, qual a referência bibliográfica, né? E a maior referência bibliográfica é de internet.
+
+Eu não sei se se bota direto. Não aí, por exemplo, aqui que tu colocou o Mamafa, onde é que tu tirou o Mamafa. Ali a referência tá na própria Mamafa.
+
+Eu digo que, talvez, ali embaixo, quando vocês dizem aí isso, relatório didático, né? Se chama relatório didático. Você vai ter que ver também, se eu melhor ou não, né? Relatório didático. Ali, a gente pode colocar, né? Referências.
+
+Esse trabalho foi baseado em em fulano, meu velho, né? É, dá pra botar todas as referências, tanto de plataforma... Aí dentro mesmo, né? Daria pra colocar. Você falou também que queria uma coisa explicando, né? O que seria o balanço hídrico. Isso, isso.
+
+É uma apostila, nesse caso, é uma apostila com umas duas floragenazinhas. Entendem? E eu acho que que na hora que a gente diz ali, colocar o texto do cara, é preciso o que eu quero dizer é o seguinte. A pessoa que for olhar isso aí, entende? Ela, ela, ela na realidade ela não sabe o que que é um balanço hídrico.
+
+Algumas vão saber, as outras não vão saber o que que é um balanço hídrico. Então, é preciso um texto que diga o que que é um balanço hídrico, pra que que serve o balanço hídrico, pra que que serve o balanço hídrico. E tudo isso eu tenho na apostila.
+
+Entendi. Agora, nós não vamos carregar tudo aqui, que tá tão bacana aqui. Aqui nós só vamos anunciar de onde é que qual foi o texto que deu base pra essa janela, pra essa balanço hídrico.
+
+E as nossas referências do trabalho americano, o mapa, as referências biográficas. Agora... A gente pode colocar algo como, não sei, material de apoio, material explicativo, que fizesse esse link, que não só a pessoa usar o serviço do cálculo na plataforma, mas ela também se alimentar do por trás, da parte propriamente dita, a explicação geral do que ela tá fazendo. Porque, na realidade, vocês chamaram de... Esse ordenatório que tem aí, esse ordenatório que tem aqui que foi colocado, na realidade, vocês colocaram todas as formas, né? Não é isso? É, como que a gente utiliza... É basicamente um resumo de tudo que tá aparecendo.
+
+É, é um resumo escrito da toda funcionabilidade por trás do site, né? Como que ele calculou isso, como ele teve essa... Chegou nesses resultados. Exatamente. Na realidade, é uma memória de cálculo.
+
+Isso aí. Em engenharia, nós chamaríamos isso aqui de uma memória de cálculo. Eu não sei se a gente utilizar um termo de engenharia assim, memória de cálculo, não geraria também uma série de discussões, entendeu? Discussões, né? Por exemplo, síntese... Síntese dos resultados... Síntese... Não é síntese, não chega a ser uma síntese, mas é relatório dos resultados.
+
+Algo parecido, entende? Acho que a gente não tem que entender muito perto, mas, por exemplo, relatório dos resultados, por exemplo, né? Relatório de síntese dos resultados. Agora, o que é que vai aqui dentro? Onde é que tem umas formas?
+
+(Este arquivo tem mais de 30 minutos. Atualize para Ilimitado em https://turboscribe.ai/pt/ para transcrever arquivos de até 10 horas.)

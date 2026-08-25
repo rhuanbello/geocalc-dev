@@ -1,0 +1,27 @@
+* Início da página: ok
+
+* Conceitos básicos e metodologia
+
+- ele vai fazer uma correção dos textos em doc. word.
+
+* Fontes de dados da obtenção da precipitação e temperatura
+
+- Também vai fazer modificações no texto em doc. word.
+- Deixar mais claro o fluxo do INMET e do Open-meteo. 
+- Melhorar a explicação do bloco "normal do período" selecionado (sugestão em inserir) e deixando claro que essa situação é com Open-meteo.
+- meses incompletos colocar somente como uma observação, retirar do bloco.
+- Bloco enfatizando que o open-meteo será utilizado quando não for possível utilizar o INMET. 
+
+* Local e clima
+
+- Inserir dados das demais normais climatológicas do INMET na busca.
+- Checar fator de correção.
+- Correção dos locais que não corresponde exatamente a latitude de fator (ver como fazer essa correção).
+- Definir arredondamento metade dos blocos da latitude, tanto para norte quanto para sul por exemplo:15, 25, 35 ...
+- Exemplo: se a latitude for 22 se encaixa em 20, 23 se encaixa em 25, se for 28 se encaixa em 30... 
+- Colocar Open-meteo como alternativa, para ser usado na ausência de estações do INMET
+- Inverter a ordem, colocar o INMET como o principal. 
+
+Atividades extras
+
+- Validar o era 5 land com as mesma estações e ver se é mais semelhante que o era 5.
