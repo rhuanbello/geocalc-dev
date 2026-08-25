@@ -34,6 +34,25 @@ mock.module("@/components/MapPicker", () => ({
   ),
 }));
 
+mock.module("@/components/EupsMapPicker", () => ({
+  EupsMapPicker: ({
+    onPointChange,
+    onSlopeLineChange,
+  }: {
+    onPointChange: (point: { latitude: number; longitude: number }) => void;
+    onSlopeLineChange: (points: Array<{ latitude: number; longitude: number }>) => void;
+  }) => (
+    <div>
+      <button type="button" onClick={() => onPointChange({ latitude: -22.9, longitude: -43.1 })}>
+        Selecionar ponto EUPS
+      </button>
+      <button type="button" onClick={() => onSlopeLineChange([{ latitude: -22.9, longitude: -43.1 }, { latitude: -22.9, longitude: -43.099 }])}>
+        Medir vertente EUPS
+      </button>
+    </div>
+  ),
+}));
+
 mock.module("recharts", () => {
   const passthrough =
     (name: string) =>
@@ -399,12 +418,20 @@ describe("App spreadsheet parity", () => {
     });
   });
 
-  test("simplifica a sidebar", () => {
+  test("navega entre os módulos pela sidebar", async () => {
+    const user = userEvent.setup();
     render(<App />);
 
-    expect(screen.getByRole("link", { name: "Balanço Hídrico" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Balanço Hídrico" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Perda de Solo · EUPS" })).toBeTruthy();
     expect(screen.queryByText("Modelos geoquímicos")).toBeNull();
     expect(screen.queryByText(/Ferramenta educacional/)).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Perda de Solo · EUPS" }));
+    expect(screen.getByRole("heading", { name: "Perda de Solo (EUPS)" })).toBeTruthy();
+    expect(screen.getByText("Equação Universal de Perda de Solo")).toBeTruthy();
+    expect(screen.getByLabelText("Cobertura, manejo e conservação")).toBeTruthy();
+    expect(screen.getByText("Potencial natural de erosão")).toBeTruthy();
   });
 
   test("usa linhas para precipitacao e ETP e barras para BH", () => {

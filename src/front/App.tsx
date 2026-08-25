@@ -2,7 +2,6 @@ import {
   BarChart3,
   BadgeCheck,
   BookOpen,
-  Calculator,
   Clipboard,
   CloudSun,
   Database,
@@ -82,6 +81,8 @@ import {
 } from "$/inmet-normals";
 import "katex/dist/katex.min.css";
 import {Formula} from "@/components/Formula";
+import { AppSidebar, type GeoCalcModule } from "@/components/AppSidebar";
+import { EupsPage } from "@/modules/eups/EupsPage";
 
 type SourceState = "manual" | "open-meteo" | "inmet";
 
@@ -185,6 +186,20 @@ function getEffectiveEndDate(endYear: number): string {
 }
 
 export function App() {
+  const [activeModule, setActiveModule] = useState<GeoCalcModule>("water-balance");
+
+  if (activeModule === "eups") {
+    return <EupsPage onModuleChange={setActiveModule} />;
+  }
+
+  return <WaterBalancePage onModuleChange={setActiveModule} />;
+}
+
+function WaterBalancePage({
+  onModuleChange,
+}: {
+  onModuleChange: (module: GeoCalcModule) => void;
+}) {
   const [monthlyTextInputs, setMonthlyTextInputs] = useState<MonthlyTextInput[]>(
     EMPTY_MONTHLY_TEXT_INPUTS,
   );
@@ -546,7 +561,7 @@ export function App() {
     <TooltipProvider>
       <ToastProvider duration={NOTIFICATION_DURATION}>
         <div className="app-layout">
-          <AppSidebar />
+          <AppSidebar activeModule="water-balance" onModuleChange={onModuleChange} />
 
         <main className="app-shell">
           <ModuleHeader />
@@ -630,24 +645,6 @@ export function App() {
         <ToastViewport />
       </ToastProvider>
     </TooltipProvider>
-  );
-}
-
-function AppSidebar() {
-  return (
-    <aside className="app-sidebar" aria-label="Navegação principal">
-      <div className="sidebar-brand">
-        <strong className="wordmark">GeoCalc</strong>
-        <span>PPG Geoquímica / UFF</span>
-      </div>
-
-      <nav className="sidebar-nav">
-        <a className="active" href="#balanco-hidrico" aria-current="page">
-          <Calculator />
-          <span>Balanço Hídrico</span>
-        </a>
-      </nav>
-    </aside>
   );
 }
 

@@ -111,6 +111,7 @@ button:disabled {
 }
 
 .sidebar-nav a,
+.sidebar-nav button,
 .sidebar-nav span {
   min-height: 42px;
   display: flex;
@@ -123,6 +124,14 @@ button:disabled {
   font-weight: 800;
 }
 
+.sidebar-nav button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+}
+
 .sidebar-nav svg {
   width: 18px;
   height: 18px;
@@ -132,6 +141,321 @@ button:disabled {
 .sidebar-nav .active {
   background: #f8f3e9;
   color: var(--sidebar);
+}
+
+/* EUPS: analysis by representative point, with the calculation as the visual focus. */
+.eups-methodology-panel {
+  background: linear-gradient(90deg, rgb(0 155 110 / 0.09), transparent 62%), #fff;
+}
+
+.eups-method-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.eups-method-card,
+.eups-factor-card,
+.eups-result-card,
+.eups-measurement-card,
+.spatial-status-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.eups-method-card {
+  display: flex;
+  min-height: 166px;
+  flex-direction: column;
+  padding: 13px;
+}
+
+.eups-method-card h3,
+.eups-factor-card h3,
+.eups-result-card h3 {
+  margin: 0;
+  color: var(--brand-dark);
+  font-family: "Roboto Slab", Georgia, serif;
+  font-size: 0.96rem;
+  line-height: 1.25;
+}
+
+.eups-method-card p,
+.eups-factor-card p,
+.eups-measurement-card span,
+.spatial-status-card span,
+.cp-reference span,
+.eups-errors span {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.eups-method-card .formula {
+  margin-top: auto;
+  padding-top: 11px;
+}
+
+.eups-method-card .formula .katex-display {
+  margin: 0;
+  padding: 8px 10px;
+  overflow-x: auto;
+  border: 1px solid rgb(0 155 110 / 0.18);
+  border-radius: 7px;
+  background: #f0faf5;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.eups-study-grid {
+  display: grid;
+  grid-template-columns: minmax(310px, 0.8fr) minmax(0, 1.2fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.eups-study-controls {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.eups-coordinate-facts {
+  margin: 0;
+}
+
+.eups-measurement-card,
+.spatial-status-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
+}
+
+.eups-measurement-card > svg,
+.spatial-status-card > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--brand-green);
+}
+
+.eups-measurement-card strong,
+.spatial-status-card strong {
+  display: block;
+  color: var(--brand-dark);
+  font-family: "Roboto Slab", Georgia, serif;
+  font-size: 0.92rem;
+}
+
+.eups-measurement-card span,
+.spatial-status-card span {
+  display: block;
+  margin-top: 4px;
+}
+
+.eups-measurement-card b {
+  grid-column: 2;
+  color: var(--brand-green);
+  font-size: 0.9rem;
+}
+
+.spatial-status-card {
+  border-style: dashed;
+  background: #f7fbf8;
+}
+
+.eups-map-frame {
+  min-height: 390px;
+}
+
+.eups-map-toolbar {
+  position: absolute;
+  z-index: 600;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  gap: 5px;
+}
+
+.eups-map-toolbar button {
+  display: inline-flex;
+  width: auto;
+  min-width: 106px;
+  height: 34px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--brand-dark);
+  box-shadow: 0 4px 14px rgb(26 59 41 / 0.16);
+}
+
+.eups-map-toolbar button.active {
+  border-color: var(--brand-green);
+  background: var(--brand-green);
+  color: #fff;
+}
+
+.eups-map-toolbar svg {
+  width: 17px;
+  height: 17px;
+}
+
+.eups-map-toolbar span {
+  font-size: 0.73rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.eups-r-methods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.eups-r-methods button {
+  display: grid;
+  gap: 3px;
+  min-height: 68px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--brand-dark);
+  text-align: left;
+}
+
+.eups-r-methods button.active {
+  border-color: var(--brand-green);
+  background: #e9f8f0;
+  box-shadow: inset 0 0 0 1px rgb(0 155 110 / 0.1);
+}
+
+.eups-r-methods strong { font-size: 0.9rem; }
+.eups-r-methods span { color: var(--muted); font-size: 0.78rem; }
+
+.eups-factor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.eups-factor-card {
+  position: relative;
+  display: flex;
+  min-height: 178px;
+  flex-direction: column;
+  padding: 13px;
+}
+
+.eups-factor-card.is-result { background: #f1faf5; }
+
+.eups-factor-code {
+  display: grid;
+  width: 30px;
+  height: 25px;
+  place-items: center;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background: var(--brand-dark);
+  color: #fff;
+  font-size: 0.79rem;
+  font-weight: 900;
+}
+
+.eups-factor-card small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.eups-factor-card input {
+  margin-top: 12px;
+  border-color: rgb(0 155 110 / 0.48);
+  background: #e9f8f0;
+  font-weight: 800;
+}
+
+.eups-factor-card > strong {
+  display: block;
+  margin-top: 12px;
+  color: var(--brand-dark);
+  font-family: "Roboto Slab", Georgia, serif;
+  font-size: 1.2rem;
+}
+
+.eups-factor-card p { margin-top: auto; }
+
+.cp-reference {
+  display: grid;
+  grid-template-columns: auto repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 12px;
+  padding: 11px 13px;
+  border: 1px solid rgb(0 155 110 / 0.24);
+  border-radius: 7px;
+  background: #f7fcf9;
+}
+
+.cp-reference strong { color: var(--brand-dark); font-size: 0.84rem; }
+.cp-reference span { margin: 0; font-size: 0.78rem; }
+
+.eups-rainfall-toolbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(160px, 0.45fr) minmax(280px, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.eups-import-button { min-height: 38px; white-space: nowrap; }
+
+.eups-rainfall-table-wrap { margin-top: 14px; overflow-x: auto; }
+.eups-rainfall-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.eups-rainfall-table th, .eups-rainfall-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+.eups-rainfall-table th { color: #fff; background: var(--brand-dark); font-size: 0.79rem; }
+.eups-rainfall-table td input { height: 32px; border-color: rgb(0 155 110 / 0.4); background: #e9f8f0; font-weight: 800; }
+.eups-rainfall-table tfoot td { color: var(--brand-dark); background: #f0faf5; font-weight: 900; }
+
+.eups-result-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.eups-result-card { min-height: 150px; padding: 15px; background: #f7fbf8; }
+.eups-result-card.is-emphasis { border-color: var(--brand-green); background: var(--brand-dark); }
+.eups-result-card > span { color: var(--brand-green); font-size: 0.78rem; font-weight: 900; }
+.eups-result-card h3 { margin-top: 10px; }
+.eups-result-card strong { display: block; margin-top: 16px; color: var(--brand-dark); font-family: "Roboto Slab", Georgia, serif; font-size: 1.48rem; line-height: 1.1; }
+.eups-result-card small { display: block; margin-top: 4px; color: var(--muted); font-size: 0.8rem; }
+.eups-result-card.is-emphasis h3, .eups-result-card.is-emphasis strong { color: #fff; }
+.eups-result-card.is-emphasis small { color: rgb(255 255 255 / 0.72); }
+
+.eups-errors { display: flex; flex-wrap: wrap; gap: 5px 8px; margin-top: 12px; padding: 10px 12px; border-left: 3px solid var(--warning); border-radius: 0 6px 6px 0; background: #fff9ed; }
+.eups-errors strong { color: #6a4b0e; font-size: 0.84rem; }
+.eups-errors span { margin: 0; }
+.eups-reference-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.eups-notice { position: fixed; right: 18px; bottom: 18px; z-index: 1300; display: flex; align-items: center; gap: 12px; max-width: 390px; padding: 11px 13px; border: 1px solid rgb(0 155 110 / 0.32); border-radius: 8px; background: #edf9f4; box-shadow: 0 16px 40px rgb(26 59 41 / 0.18); color: var(--brand-dark); font-size: 0.87rem; font-weight: 700; }
+.eups-notice button { border: 0; background: transparent; color: inherit; font-size: 1.15rem; }
+
+@media (max-width: 1120px) {
+  .eups-method-grid, .eups-factor-grid, .eups-reference-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .eups-study-grid { grid-template-columns: 1fr; }
+  .eups-map-frame { min-height: 360px; }
+  .cp-reference { grid-template-columns: 1fr; }
+  .eups-rainfall-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 680px) {
+  .eups-method-grid, .eups-factor-grid, .eups-result-grid, .eups-r-methods, .eups-reference-grid, .eups-rainfall-toolbar { grid-template-columns: 1fr; }
+  .eups-method-card, .eups-factor-card { min-height: 0; }
+  .eups-map-frame { min-height: 320px; }
 }
 
 .sidebar-nav .disabled {
