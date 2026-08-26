@@ -1,2 +1,9 @@
 Precisamos seguir exatamente o mesmo esqueleto do módulo de balanço hídrico. Começando com a seção de conceitos básicos e metodologia, com a explicação da EUPS, usando o material fornecido pelo bida. Card sendo: Erosão Laminar -> é um processo de degradação do solo pela ação da àgua da chuva removendo uma fina camada superficial do solo. É um processo contínuo e uniforme, no geral sem formar sulcos visíveis. Outro card: Equação Universal de Perda de Solo (EUPS), e assim segue, usando a referência da planilha. Outro ponto importante é que temos que ter a fórmula nos cards. exemplo: PS = K * R * LS * CP a partir do segundo card.
 
+Também precisamos de uma seção de referências e fonte, no mesmo modelo do balanço hídrico. nela deve conter a fonte citada pelo bida: Wischmeier e Smith, e outras se conter no arquivo fornecido por ele. É importante entender do que se trata a fonte do Wischmeier, pra que a gente contextualize corretamente na descrição da fonte. Também é interessante buscar os valores tabelados do manejo e do solo pra referenciarmos.
+
+Em todas as etapas, o bloco o que informar, ou o bloco o que representa k, etc. precism estar acima da tabela, ocupando toda a largura. e a tabela logo abaixo, ocupando toda a largura também. padronize isso em todas as seções de etapa. tambem vamos remover o bloco lateral com o numero da etapa. tambem vamos remover a descrição de cada etapa, exemplo: "Escolha uma referência e adote o fator K", etc.
+
+A etapa de resultado da estimativa deve ser similar à tabela de cálculo final que fizemos no balanço hidrico e inspirada na tabela com input e output do arquivo do bida, tendo um compilado de tudo que foi preenchido e mostrando o resultado final. temos que deixar 
+
+De onde estamos tirando a PNE? qual arquivo/audio? se enquadra nesse modulo?

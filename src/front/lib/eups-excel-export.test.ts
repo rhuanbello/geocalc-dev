@@ -25,6 +25,7 @@ test("creates a manual EUPS workbook without spatial metadata", () => {
   expect(sheet?.getCell("B4").value).toBe("Cálculo manual com 12 precipitações mensais");
   expect(sheet?.getCell("B8").value).toBe("Areia quartzosa");
   expect(sheet?.getCell("B9").value).toBe(0.027);
-  expect(sheet?.getCell("B17").value).toBeCloseTo(result.soilLoss ?? 0, 10);
+  expect(sheet?.getCell("B16").value).toBeCloseTo(result.soilLoss ?? 0, 10);
   expect(sheet?.getCell("A4").value).not.toBe("Local");
+  expect(sheet?.getCell("A17").value).not.toBe("PNE");
 });

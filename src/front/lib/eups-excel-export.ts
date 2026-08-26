@@ -53,7 +53,6 @@ export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook
     ["LS", params.result.topographicFactor, "Fator topográfico"],
     ["Referência de CP", params.cpReferenceLabel, "Apoio didático da planilha"],
     ["CP", params.cp, "Cobertura, manejo e conservação"],
-    ["PNE", params.result.naturalErosionPotential, "Potencial natural de erosão"],
     ["PS", params.result.soilLoss, "Perda média anual estimada de solo"],
     ["Classificação", params.result.classification, "Baixa < 10; Média 10–25; Alta > 25"],
   ];
@@ -66,7 +65,7 @@ export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook
     sheet.mergeCells(`C${row}:E${row}`);
   });
 
-  const header = 20;
+  const header = 19;
   sheet.getRow(header).values = ["Mês", "Precipitação r (mm)", "I30", "", ""];
   styleHeader(sheet.getRow(header));
   params.result.rows.forEach((row, index) => {
@@ -77,25 +76,24 @@ export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook
     sheet.getCell(`B${target}`).numFmt = "0.0";
     sheet.getCell(`C${target}`).numFmt = "0.000";
   });
-  sheet.getCell("A33").value = "Precipitação anual (P)";
-  sheet.getCell("B33").value = params.result.precipitationTotal;
-  sheet.getCell("A34").value = "Erosividade anual (R)";
-  sheet.getCell("B34").value = params.result.rainfallErosivity;
-  [33, 34].forEach((row) => {
+  sheet.getCell("A32").value = "Precipitação anual (P)";
+  sheet.getCell("B32").value = params.result.precipitationTotal;
+  sheet.getCell("A33").value = "Erosividade anual (R)";
+  sheet.getCell("B33").value = params.result.rainfallErosivity;
+  [32, 33].forEach((row) => {
     sheet.getCell(`B${row}`).numFmt = "0.000";
     sheet.getRow(row).font = { bold: true, color: { argb: dark } };
   });
 
-  const notesStart = 36;
+  const notesStart = 35;
   sheet.mergeCells(`A${notesStart}:E${notesStart}`);
   sheet.getCell(`A${notesStart}`).value = "Metodologia e referências";
   styleSection(sheet.getRow(notesStart));
   [
     "PS = K × R × LS × CP.",
     "LS = 0,00984 × L^0,63 × S^1,18.",
-    "PNE = R × K × LS; PS considera adicionalmente CP.",
     "I30 = 67,355 × ((r² / P)^0,85); R = ΣI30.",
-    "Base de cálculo: tabela da EUPS fornecida pelo Bida; Wischmeier e Smith.",
+    "Base de cálculo: tabela da EUPS fornecida pelo Bida; Wischmeier e Smith (1965), USDA Agriculture Handbook No. 282.",
     "Esta versão não consulta fontes espaciais e não calcula transporte ou sedimentação.",
   ].forEach((note, index) => {
     const row = notesStart + 1 + index;
@@ -103,7 +101,7 @@ export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook
     sheet.mergeCells(`A${row}:E${row}`);
   });
 
-  [4, 5, ...Array.from({ length: 11 }, (_, index) => 8 + index), ...Array.from({ length: 12 }, (_, index) => 21 + index), 33, 34, ...Array.from({ length: 6 }, (_, index) => notesStart + 1 + index)].forEach((row) => {
+  [4, 5, ...Array.from({ length: 10 }, (_, index) => 8 + index), ...Array.from({ length: 12 }, (_, index) => 20 + index), 32, 33, ...Array.from({ length: 5 }, (_, index) => notesStart + 1 + index)].forEach((row) => {
     sheet.getRow(row).eachCell((cell) => {
       cell.border = { bottom: { style: "thin", color: { argb: "FFCFDDD5" } } };
       cell.alignment = { vertical: "top", wrapText: true };

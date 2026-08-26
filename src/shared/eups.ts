@@ -20,7 +20,6 @@ export type EupsResult = {
   precipitationTotal: number | null;
   rainfallErosivity: number | null;
   topographicFactor: number | null;
-  naturalErosionPotential: number | null;
   soilLoss: number | null;
   classification: "Baixa" | "Média" | "Alta" | null;
   isComplete: boolean;
@@ -73,11 +72,9 @@ export function calculateEups(input: EupsInput): EupsResult {
   const topographicFactor = input.slopeLength !== null && input.slopePercent !== null
     ? calculateTopographicFactor(input.slopeLength, input.slopePercent)
     : null;
-  const naturalErosionPotential = input.k !== null && rainfallErosivity !== null && topographicFactor !== null
+  const soilLoss = input.k !== null && rainfallErosivity !== null && topographicFactor !== null && input.cp !== null
     ? input.k * rainfallErosivity * topographicFactor
-    : null;
-  const soilLoss = naturalErosionPotential !== null && input.cp !== null
-    ? naturalErosionPotential * input.cp
+      * input.cp
     : null;
 
   return {
@@ -85,10 +82,9 @@ export function calculateEups(input: EupsInput): EupsResult {
     precipitationTotal,
     rainfallErosivity,
     topographicFactor,
-    naturalErosionPotential,
     soilLoss,
     classification: classifySoilLoss(soilLoss),
-    isComplete: errors.length === 0 && rainfallErosivity !== null && topographicFactor !== null && naturalErosionPotential !== null && soilLoss !== null,
+    isComplete: errors.length === 0 && rainfallErosivity !== null && topographicFactor !== null && soilLoss !== null,
     errors,
   };
 }

@@ -4,14 +4,14 @@ import { calculateEups, calculateMonthlyErosivity, calculateTopographicFactor } 
 const completeRainfall = [208, 168, 260, 225, 208, 272, 45, 26, 42, 36, 42, 26];
 
 describe("EUPS-base", () => {
-  test("calculates R, LS, PNE and PS from the twelve manual monthly values", () => {
+  test("calculates P, R, LS and PS from the twelve manual monthly values", () => {
     const result = calculateEups({ rainfall: completeRainfall, k: 0.027, slopeLength: 120, slopePercent: 20, cp: 1 });
 
     expect(result.precipitationTotal).toBe(1558);
     expect(result.rainfallErosivity).toBeCloseTo(8170.944807289601, 10);
     expect(result.topographicFactor).toBeCloseTo(6.888024422845518, 10);
-    expect(result.naturalErosionPotential).toBeCloseTo(1519.605019539005, 10);
     expect(result.soilLoss).toBeCloseTo(1519.605019539005, 10);
+    expect("naturalErosionPotential" in result).toBe(false);
     expect(result.classification).toBe("Alta");
     expect(result.isComplete).toBe(true);
   });

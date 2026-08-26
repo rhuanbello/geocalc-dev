@@ -33,7 +33,7 @@ export function AppSidebar({
           onClick={() => onModuleChange("eups")}
         >
           <Layers3 />
-          <span>Perda de Solo · EUPS</span>
+          <span>Perda de Solos (EUPS)</span>
         </button>
       </nav>
     </aside>

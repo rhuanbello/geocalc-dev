@@ -24,10 +24,13 @@ test("mantém o balanço hídrico calculável com os valores da planilha", async
 
 test("percorre a EUPS-base manual sem fontes espaciais", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Perda de Solo · EUPS" }).click();
+  await page.getByRole("button", { name: "Perda de Solos (EUPS)" }).click();
 
-  await expect(page.getByRole("heading", { name: "Perda de Solo (EUPS)" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Perda de Solo (EUPS)", exact: true })).toBeVisible();
+  await expect(page.getByText("Conceitos básicos e metodologia")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Chuva e erosividade" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Erosão laminar", exact: true })).toBeVisible();
+  await expect(page.getByText(/Etapa 0/)).toHaveCount(0);
   await expect(page.getByText("Mapa de erosividade")).toHaveCount(0);
   await expect(page.getByText("Importar precipitação")).toHaveCount(0);
 
@@ -45,6 +48,7 @@ test("percorre a EUPS-base manual sem fontes espaciais", async ({ page }) => {
   await page.getByRole("combobox", { name: "Referência de cobertura e manejo" }).click();
   await page.getByText("Solo exposto, sem práticas", { exact: true }).click();
 
-  await expect(page.locator(".eups-result-card").filter({ hasText: "Perda média anual estimada" })).toContainText("1.519,61");
+  await expect(page.locator(".eups-final-table")).toContainText("1.519,61");
+  await expect(page.getByText("Potencial natural de erosão")).toHaveCount(0);
   await expect(page.getByText(/Todos os fatores necessários foram informados/)).toBeVisible();
 });
