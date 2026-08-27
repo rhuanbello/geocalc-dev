@@ -1,9 +1,10 @@
-import { BookOpen, Calculator, CheckCircle2, Clipboard, Download, Droplets, Leaf, Mountain, Sprout } from "lucide-react";
+import { BookOpen, Calculator, CheckCircle2, Clipboard, Download, Droplets, Leaf, MapPinned, Mountain, Sprout } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { Formula } from "@/components/Formula";
 import { StaticCombobox } from "@/components/StaticCombobox";
 import { AppSidebar, type GeoCalcModule } from "@/components/AppSidebar";
 import { exportEupsWorkbook } from "@/lib/eups-excel-export";
+import { EupsSpatialMap, type EupsSpatialPoint } from "./EupsSpatialMap";
 import { EMPTY_EUPS_RAINFALL, EUPS_MONTHS, calculateEups, type EupsRainfallInput } from "$/eups";
 import { EUPS_METHODOLOGY, EUPS_REFERENCE_SOURCES } from "$/eups-academic";
 import { EUPS_CP_REFERENCES, EUPS_SOIL_REFERENCES, type EupsCpReference, type EupsSoilReference } from "$/eups-references";
@@ -22,6 +23,7 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
   const [slopeText, setSlopeText] = useState("");
   const [cpText, setCpText] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+  const [spatialPoint, setSpatialPoint] = useState<EupsSpatialPoint | null>(null);
 
   const rainfall = useMemo<EupsRainfallInput[]>(() => rainfallTexts.map(parseDecimal), [rainfallTexts]);
   const k = parseDecimal(kText);
@@ -49,6 +51,12 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
     <main className="app-shell">
       <ModuleHeader />
       <MethodologyPanel />
+
+      <section className="panel eups-spatial-panel">
+        <PanelTitle icon={<MapPinned className="size-4" />} title="Localização e fatores espaciais" description="Selecione um ponto para visualizar as camadas R e K no mesmo mapa." />
+        <Guidance title="Consulta espacial">A camada K é consultada no polígono correspondente ao ponto selecionado. O fator R aguarda o COG oficial. Nesta etapa, os valores espaciais ainda não substituem as entradas manuais nem entram no cálculo de perda de solo.</Guidance>
+        <EupsSpatialMap point={spatialPoint} onPointChange={setSpatialPoint} />
+      </section>
 
       <section className="panel eups-input-panel">
         <PanelTitle icon={<Droplets className="size-4" />} title="Chuva e erosividade" />
