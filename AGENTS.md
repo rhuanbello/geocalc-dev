@@ -56,14 +56,18 @@ Cada issue deve ter exatamente um label `module:*` e um `type:*` — exceto bugs
 2. Leia a issue da tarefa, os pais e os comentários.
 3. Confirme dependências, responsável e bloqueios antes de editar.
 4. Comente o início na issue da tarefa, incluindo branch, escopo e risco conhecido.
-5. Crie branch e worktree próprios a partir da branch de integração indicada pela feature; se ela não existir, use `origin/main`.
+5. Confirme o branch e o estado do worktree ativo antes de editar:
 
 ```bash
-rtk git fetch origin
-rtk git worktree add ../geocalc-<tema> -b feat/<modulo>-<tema> origin/<branch-de-integracao>
+rtk git branch --show-current
+rtk git status --short
 ```
 
-Uma tarefa usa, em regra, um worktree, uma branch e um PR. Nunca edite o worktree de outro agente.
+6. Trabalhe exclusivamente no worktree ativo e no branch definido pelo usuário ou pela issue. **Não crie, troque, remova nem use `git worktree` sem autorização explícita do usuário.**
+
+7. Se a tarefa exigir outro branch, registre a necessidade na issue e peça orientação antes de criar ou mudar de branch. Não presuma isolamento por worktree como solução para trabalho paralelo.
+
+Em caso de alterações locais de outra pessoa, preserve-as e informe o conflito de escopo; não tente contorná-lo criando um worktree paralelo.
 
 ## Comunicação nas issues
 

@@ -8,6 +8,7 @@ import { EMPTY_EUPS_RAINFALL, EUPS_MONTHS, calculateEups, type EupsRainfallInput
 import { EUPS_METHODOLOGY, EUPS_REFERENCE_SOURCES } from "$/eups-academic";
 import { EUPS_CP_REFERENCES, EUPS_SOIL_REFERENCES, type EupsCpReference, type EupsSoilReference } from "$/eups-references";
 import type { ReferenceSource } from "$/academic";
+import { EupsSpatialMap } from "@/modules/eups/EupsSpatialMap";
 import "katex/dist/katex.min.css";
 
 const SOIL_OPTIONS: Array<{ value: EupsSoilReference["id"]; label: string; description: string }> = EUPS_SOIL_REFERENCES.map((reference) => ({ value: reference.id, label: reference.label, description: reference.description }));
@@ -49,6 +50,7 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
     <main className="app-shell">
       <ModuleHeader />
       <MethodologyPanel />
+      <EupsSpatialMap />
 
       <section className="panel eups-input-panel">
         <PanelTitle icon={<Droplets className="size-4" />} title="Chuva e erosividade" />
