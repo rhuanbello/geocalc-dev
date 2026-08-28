@@ -180,8 +180,7 @@ button:disabled {
 .eups-result-classification { justify-items: end; text-align: right; }
 .eups-result-classification strong { color: var(--brand-dark); font-size: 1rem; }
 .eups-result-classification.is-pending strong { color: var(--warning); }
-.eups-final-table-wrap { width: 100%; background: var(--brand-dark); }
-.eups-final-table { width: 100%; min-width: 780px; }
+.eups-final-table { min-width: 780px; }
 .eups-final-table th:nth-child(1), .eups-final-table td:nth-child(1) { width: 12%; }
 .eups-final-table th:nth-child(2), .eups-final-table td:nth-child(2) { width: 18%; }
 .eups-final-table th:nth-child(3), .eups-final-table td:nth-child(3) { width: 22%; }
@@ -191,10 +190,10 @@ button:disabled {
 .eups-final-table thead th { background: #e7f6ef; color: var(--brand-dark); font-size: 0.7rem; letter-spacing: 0.08em; }
 .eups-final-table tbody th { background: #fff; color: var(--brand-dark); text-align: left; }
 .eups-final-table tbody tr { transition: background-color 160ms ease; }
-.eups-final-table tbody tr:hover th, .eups-final-table tbody tr:hover td:not(.input-cell):not(.output-cell) { background-color: #f8fbf9; }
-.eups-final-table td.input-cell { background: var(--brand-green); color: #fff; }
-.eups-final-table td.output-cell { background: #eef8f2; color: var(--brand-dark); }
-.eups-final-table td.input-cell strong, .eups-final-table td.output-cell strong { font-family: inherit; font-size: inherit; font-variant-numeric: tabular-nums; }
+.eups-final-table tbody tr:hover th, .eups-final-table tbody tr:hover td { background-color: #f8fbf9; }
+.eups-final-table td.input-cell { background: #f7faf8; color: var(--brand-dark); }
+.eups-final-table td.output-cell { background: #edf8f1; color: var(--brand-dark); }
+.eups-final-table td.input-cell strong, .eups-final-table td.output-cell strong { font-family: "Roboto Slab", Georgia, serif; font-size: 1.02rem; font-variant-numeric: tabular-nums; }
 .eups-final-table .eups-output-row th { border-left: 3px solid var(--brand-green); }
 .eups-factor-code { color: var(--brand-dark); font-family: "Roboto Slab", Georgia, serif; font-size: 1.06rem; font-weight: 700; }
 .eups-type-tag { display: inline-flex; align-items: center; min-height: 23px; padding: 2px 7px; border-radius: 999px; font-size: 0.68rem; font-weight: 900; line-height: 1; text-transform: uppercase; letter-spacing: 0.05em; }
