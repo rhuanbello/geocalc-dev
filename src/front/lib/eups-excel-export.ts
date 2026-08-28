@@ -45,13 +45,13 @@ export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook
   sheet.getCell("A7").value = "Fatores e resultados";
   styleSection(sheet.getRow(7));
   const factorRows = [
-    ["Referência de solo", params.soilReferenceLabel, "Apoio didático da planilha"],
+    ["Referência de solo", params.soilReferenceLabel, "Apoio didático da Tabela de referência EUPS"],
     ["K", params.k, "Erodibilidade do solo"],
     ["R", params.result.rainfallErosivity, "Erosividade calculada pelas chuvas mensais"],
     ["L", params.slopeLength, "Comprimento horizontal da vertente (m)"],
     ["S", params.slopePercent, "Declividade (%)"],
     ["LS", params.result.topographicFactor, "Fator topográfico"],
-    ["Referência de CP", params.cpReferenceLabel, "Apoio didático da planilha"],
+    ["Referência de CP", params.cpReferenceLabel, "Apoio didático da Tabela de referência EUPS"],
     ["CP", params.cp, "Cobertura, manejo e conservação"],
     ["PS", params.result.soilLoss, "Perda média anual estimada de solo"],
     ["Classificação", params.result.classification, "Baixa < 10; Média 10–25; Alta > 25"],
@@ -93,7 +93,7 @@ export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook
     "PS = K × R × LS × CP.",
     "LS = 0,00984 × L^0,63 × S^1,18.",
     "I30 = 67,355 × ((r² / P)^0,85); R = ΣI30.",
-    "Base de cálculo: tabela da EUPS fornecida pelo Bida; Wischmeier e Smith (1965), USDA Agriculture Handbook No. 282.",
+    "Base de cálculo: Tabela de referência EUPS; Wischmeier e Smith (1965), USDA Agriculture Handbook No. 282.",
     "Esta versão não consulta fontes espaciais e não calcula transporte ou sedimentação.",
   ].forEach((note, index) => {
     const row = notesStart + 1 + index;

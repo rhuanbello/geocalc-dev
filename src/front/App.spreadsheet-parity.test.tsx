@@ -424,6 +424,9 @@ describe("App spreadsheet parity", () => {
       "Cobertura, manejo e conservação (CP)",
     ].forEach((title) => expect(screen.getByText(title)).toBeTruthy());
     expect(screen.getByText("Referências e fontes")).toBeTruthy();
+    expect(screen.getAllByText(/Tabela de referência EUPS/).length).toBeGreaterThan(0);
+    expect((screen.getByLabelText("Síntese dos resultados da EUPS") as HTMLTextAreaElement).value).not.toMatch(/Bida/i);
+    expect(screen.queryByText(/Bida/i)).toBeNull();
     expect(screen.queryByText("Potencial natural de erosão")).toBeNull();
     expect(screen.queryByText(/Etapa 0/)).toBeNull();
     expect(screen.queryByText("Mapa de erosividade")).toBeNull();

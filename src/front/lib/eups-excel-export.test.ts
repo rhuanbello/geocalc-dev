@@ -26,6 +26,9 @@ test("creates a manual EUPS workbook without spatial metadata", () => {
   expect(sheet?.getCell("B8").value).toBe("Areia quartzosa");
   expect(sheet?.getCell("B9").value).toBe(0.027);
   expect(sheet?.getCell("B16").value).toBeCloseTo(result.soilLoss ?? 0, 10);
+  expect(sheet?.getCell("C8").value).toBe("Apoio didático da Tabela de referência EUPS");
+  expect(sheet?.getCell("A39").value).toContain("Tabela de referência EUPS");
+  expect(sheet?.getCell("A39").value).not.toMatch(/Bida/i);
   expect(sheet?.getCell("A4").value).not.toBe("Local");
   expect(sheet?.getCell("A17").value).not.toBe("PNE");
 });

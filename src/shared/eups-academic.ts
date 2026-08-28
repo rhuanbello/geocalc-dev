@@ -17,7 +17,7 @@ export const EUPS_METHODOLOGY: MethodologySection[] = [
   },
   {
     title: "Erodibilidade do solo (K)",
-    body: "Expressa a facilidade com que o solo pode ser desagregado e transportado pela água. Os valores disponíveis são referências didáticas da planilha do Bida; o valor adotado continua editável.",
+    body: "Expressa a facilidade com que o solo pode ser desagregado e transportado pela água. Os valores disponíveis são referências didáticas da Tabela de referência EUPS; o valor adotado continua editável.",
     formulas: ["K = \\text{fator de erodibilidade do solo}"],
   },
   {
