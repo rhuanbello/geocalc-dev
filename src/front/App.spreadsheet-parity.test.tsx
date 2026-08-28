@@ -37,15 +37,15 @@ mock.module("@/components/MapPicker", () => ({
 mock.module("recharts", () => {
   const passthrough =
     (name: string) =>
-    ({
-      children,
-      dataKey,
-      name: seriesName,
-    }: {
-      children?: ReactNode;
-      dataKey?: string;
-      name?: string;
-    }) =>
+      ({
+        children,
+        dataKey,
+        name: seriesName,
+      }: {
+        children?: ReactNode;
+        dataKey?: string;
+        name?: string;
+      }) =>
       (
         <div
           data-key={dataKey}
@@ -421,7 +421,7 @@ describe("App spreadsheet parity", () => {
     expect(screen.getByText("Precipitação anual")).toBeTruthy();
     expect(screen.getByText("Cobertura (CP)")).toBeTruthy();
     expect(screen.getByText("Pendente")).toBeTruthy();
-    expect(document.querySelectorAll(".eups-final-table .eups-type-tag.input")).toHaveLength(4);
+    expect(document.querySelectorAll(".eups-result-panel:not(.fcps-panel) .eups-type-tag.input")).toHaveLength(4);
     expect(screen.queryByText("Resultado final")).toBeNull();
     [
       "Erosão laminar",
@@ -458,6 +458,39 @@ describe("App spreadsheet parity", () => {
     await user.click(screen.getByText("Latossolo V-A"));
     expect((screen.getByLabelText("Fator K") as HTMLInputElement).value).toBe("");
     expect(screen.getByText(/Faixa de referência: 0,013 a 0,020/)).toBeTruthy();
+  });
+
+  test("mantém FCPS opcional, posterior à EUPS e restrita à sua própria validação", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+
+    expect(screen.getByText("Análise complementar")).toBeTruthy();
+    const fcpsPanel = screen.getByRole("region", { name: "Análise complementar FCPS" });
+    const summaryPanel = screen.getByLabelText("Síntese dos resultados da EUPS").closest("section")!;
+    expect(fcpsPanel.compareDocumentPosition(summaryPanel) & 4).toBe(4);
+    const ccs = screen.getByLabelText("Concentração de contaminante no solo (CCS)") as HTMLInputElement;
+    expect(ccs.disabled).toBe(true);
+    expect(screen.getByText("Como a FCPS é estimada")).toBeTruthy();
+    expect(screen.getByText("PS será disponibilizada aqui após a conclusão da EUPS.")).toBeTruthy();
+
+    ["208", "168", "260", "225", "208", "272", "45", "26", "42", "36", "42", "26"].forEach((value, index) => {
+      fireEvent.change(screen.getByLabelText(`Precipitação de ${["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"][index]}`), { target: { value } });
+    });
+    fireEvent.change(screen.getByLabelText("Fator K"), { target: { value: "0,027" } });
+    fireEvent.change(screen.getByLabelText("Comprimento da vertente L"), { target: { value: "120" } });
+    fireEvent.change(screen.getByLabelText("Declividade S"), { target: { value: "20" } });
+    fireEvent.change(screen.getByLabelText("Cobertura, manejo e conservação"), { target: { value: "1" } });
+
+    expect(ccs.disabled).toBe(false);
+    fireEvent.change(ccs, { target: { value: "42" } });
+    expect(screen.getByLabelText("QCPS calculada").textContent).not.toBe("—");
+    expect((screen.getByLabelText("Síntese dos resultados da EUPS") as HTMLTextAreaElement).value).toContain("Análise complementar — FCPS");
+    expect((screen.getByLabelText("Síntese dos resultados da EUPS") as HTMLTextAreaElement).value).toContain("mg/kg");
+
+    fireEvent.change(ccs, { target: { value: "texto" } });
+    expect(screen.getByText("Informe CCS com um número válido em mg/kg.")).toBeTruthy();
+    expect(ccs.disabled).toBe(false);
   });
 
   test("usa linhas para precipitacao e ETP e barras para BH", () => {

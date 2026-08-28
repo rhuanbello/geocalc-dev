@@ -252,6 +252,12 @@ button:disabled {
 .eups-complete { display: flex; align-items: center; gap: 8px; margin-top: 13px; padding: 11px 13px; border-left: 3px solid var(--brand-green); border-radius: 0 6px 6px 0; background: #edf9f4; color: var(--brand-dark); font-size: 0.85rem; font-weight: 700; }
 .eups-complete svg { width: 18px; height: 18px; color: var(--brand-green); }
 .eups-reference-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fcps-heading { display: grid; gap: 8px; margin-bottom: 14px; }
+.fcps-heading .panel-title { margin: 0; }
+.fcps-final-table .input-cell input { width: 100%; min-width: 128px; min-height: 34px; border: 1px solid rgb(255 255 255 / 0.5); border-radius: 5px; background: rgb(255 255 255 / 0.1); color: #fff; font: inherit; font-weight: 800; }
+.fcps-final-table .input-cell input::placeholder { color: rgb(255 255 255 / 0.76); }
+.fcps-final-table .input-cell input:disabled { border-color: rgb(255 255 255 / 0.22); background: rgb(255 255 255 / 0.05); color: rgb(255 255 255 / 0.62); cursor: not-allowed; }
+.fcps-awaiting { display: flex; align-items: center; margin-top: 13px; padding: 11px 13px; border-left: 3px solid var(--brand-green); border-radius: 0 6px 6px 0; background: #edf9f4; color: var(--brand-dark); font-size: 0.85rem; font-weight: 700; }
 
 @media (max-width: 900px) {
   .eups-input-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
