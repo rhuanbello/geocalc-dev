@@ -415,6 +415,14 @@ describe("App spreadsheet parity", () => {
     expect(screen.getByRole("combobox", { name: "Referência de tipo de solo" })).toBeTruthy();
     expect(screen.getByLabelText("Cobertura, manejo e conservação")).toBeTruthy();
     expect(screen.getByText("Tabela de cálculo e resultado")).toBeTruthy();
+    expect(screen.getByText("Resultado principal")).toBeTruthy();
+    expect(screen.getByText("Perda média anual estimada")).toBeTruthy();
+    expect(screen.getByText("Resumo da análise")).toBeTruthy();
+    expect(screen.getByText("Precipitação anual")).toBeTruthy();
+    expect(screen.getByText("Cobertura (CP)")).toBeTruthy();
+    expect(screen.getByText("Pendente")).toBeTruthy();
+    expect(document.querySelectorAll(".eups-final-table .eups-type-tag.input")).toHaveLength(4);
+    expect(screen.queryByText("Resultado final")).toBeNull();
     [
       "Erosão laminar",
       "Equação Universal de Perda de Solo (EUPS)",
