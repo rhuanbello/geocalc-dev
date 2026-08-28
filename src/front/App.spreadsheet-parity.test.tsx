@@ -418,6 +418,7 @@ describe("App spreadsheet parity", () => {
     expect(screen.getByText("Resultado principal")).toBeTruthy();
     expect(screen.getByText("Perda média anual estimada")).toBeTruthy();
     expect(screen.getByText("Pendente")).toBeTruthy();
+    expect(document.querySelectorAll(".eups-final-table .eups-type-tag.input")).toHaveLength(4);
     [
       "Erosão laminar",
       "Equação Universal de Perda de Solo (EUPS)",
