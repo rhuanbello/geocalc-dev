@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import type { EupsResult } from "$/eups";
+import type { FcpsResult } from "$/fcps";
 import { formatIsoDatePtBr } from "$/date-format";
 
 const green = "FF009B6E";
@@ -14,6 +15,7 @@ type EupsWorkbookParams = {
   cp: number | null;
   soilReferenceLabel: string;
   cpReferenceLabel: string;
+  fcps: FcpsResult;
 };
 
 export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook {
@@ -101,7 +103,34 @@ export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook
     sheet.mergeCells(`A${row}:E${row}`);
   });
 
-  [4, 5, ...Array.from({ length: 10 }, (_, index) => 8 + index), ...Array.from({ length: 12 }, (_, index) => 20 + index), 32, 33, ...Array.from({ length: 5 }, (_, index) => notesStart + 1 + index)].forEach((row) => {
+  const fcpsRows: number[] = [];
+  if (params.fcps.status === "complete") {
+    const fcpsStart = notesStart + 7;
+    sheet.mergeCells(`A${fcpsStart}:E${fcpsStart}`);
+    sheet.getCell(`A${fcpsStart}`).value = "Análise complementar — FCPS";
+    styleSection(sheet.getRow(fcpsStart));
+    [
+      ["PS", params.fcps.soilLoss, "t/ha/ano", "Perda de solo calculada pela EUPS"],
+      ["CCS", params.fcps.concentration, "mg/kg", "Concentração manual no solo"],
+      ["QCPS", params.fcps.quantity, "kg/ha/ano", "Massa potencial associada ao solo perdido"],
+    ].forEach(([factor, value, unit, description], index) => {
+      const row = fcpsStart + 1 + index;
+      fcpsRows.push(row);
+      sheet.getCell(`A${row}`).value = factor;
+      sheet.getCell(`B${row}`).value = value as number;
+      sheet.getCell(`B${row}`).numFmt = "0.00000";
+      sheet.getCell(`C${row}`).value = unit;
+      sheet.getCell(`D${row}`).value = description;
+      sheet.mergeCells(`D${row}:E${row}`);
+    });
+    const formulaRow = fcpsStart + 4;
+    fcpsRows.push(formulaRow);
+    sheet.getCell(`A${formulaRow}`).value = "Fórmula";
+    sheet.getCell(`B${formulaRow}`).value = "QCPS = PS × CCS × 10⁻³";
+    sheet.mergeCells(`B${formulaRow}:E${formulaRow}`);
+  }
+
+  [4, 5, ...Array.from({ length: 10 }, (_, index) => 8 + index), ...Array.from({ length: 12 }, (_, index) => 20 + index), 32, 33, ...Array.from({ length: 5 }, (_, index) => notesStart + 1 + index), ...fcpsRows].forEach((row) => {
     sheet.getRow(row).eachCell((cell) => {
       cell.border = { bottom: { style: "thin", color: { argb: "FFCFDDD5" } } };
       cell.alignment = { vertical: "top", wrapText: true };

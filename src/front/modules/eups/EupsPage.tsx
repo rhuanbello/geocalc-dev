@@ -1,14 +1,15 @@
-import { ArrowDown, ArrowUp, BookOpen, Calculator, CheckCircle2, Clipboard, Download, Droplets, Leaf, Minus, Mountain, Ruler, Sprout, Zap } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
-import { Formula } from "@/components/Formula";
-import { StaticCombobox } from "@/components/StaticCombobox";
-import { AppSidebar, type GeoCalcModule } from "@/components/AppSidebar";
-import { exportEupsWorkbook } from "@/lib/eups-excel-export";
+import type { ReferenceSource } from "$/academic";
 import { EMPTY_EUPS_RAINFALL, EUPS_MONTHS, calculateEups, type EupsRainfallInput } from "$/eups";
 import { EUPS_METHODOLOGY, EUPS_REFERENCE_SOURCES } from "$/eups-academic";
 import { EUPS_CP_REFERENCES, EUPS_SOIL_REFERENCES, type EupsCpReference, type EupsSoilReference } from "$/eups-references";
-import type { ReferenceSource } from "$/academic";
+import { calculateFcps, type FcpsResult } from "$/fcps";
+import { AppSidebar, type GeoCalcModule } from "@/components/AppSidebar";
+import { Formula } from "@/components/Formula";
+import { StaticCombobox } from "@/components/StaticCombobox";
+import { exportEupsWorkbook } from "@/lib/eups-excel-export";
 import "katex/dist/katex.min.css";
+import { ArrowDown, ArrowUp, BookOpen, Calculator, CheckCircle2, Clipboard, Download, Droplets, Leaf, Minus, Mountain, Ruler, Sprout, Zap } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
 
 const SOIL_OPTIONS: Array<{ value: EupsSoilReference["id"]; label: string; description: string }> = EUPS_SOIL_REFERENCES.map((reference) => ({ value: reference.id, label: reference.label, description: reference.description }));
 const CP_OPTIONS: Array<{ value: EupsCpReference["id"]; label: string; description: string }> = EUPS_CP_REFERENCES.map((reference) => ({ value: reference.id, label: reference.label, description: reference.description }));
@@ -21,6 +22,7 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
   const [slopeLengthText, setSlopeLengthText] = useState("");
   const [slopeText, setSlopeText] = useState("");
   const [cpText, setCpText] = useState("");
+  const [ccsText, setCcsText] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
 
   const rainfall = useMemo<EupsRainfallInput[]>(() => rainfallTexts.map(parseDecimal), [rainfallTexts]);
@@ -31,6 +33,12 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
   const soilReference = EUPS_SOIL_REFERENCES.find((reference) => reference.id === soilReferenceId)!;
   const cpReference = EUPS_CP_REFERENCES.find((reference) => reference.id === cpReferenceId)!;
   const result = useMemo(() => calculateEups({ rainfall, k, slopeLength, slopePercent, cp }), [rainfall, k, slopeLength, slopePercent, cp]);
+  const ccs = parseDecimal(ccsText);
+  const fcps = useMemo(() => calculateFcps({
+    soilLoss: result.isComplete ? result.soilLoss : null,
+    concentration: ccs,
+    concentrationProvided: ccsText.trim().length > 0,
+  }), [result.isComplete, result.soilLoss, ccs, ccsText]);
 
   const selectSoilReference = (id: EupsSoilReference["id"]) => {
     const reference = EUPS_SOIL_REFERENCES.find((item) => item.id === id)!;
@@ -42,7 +50,7 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
     setCpReferenceId(id);
     setCpText(reference.suggestedCp === null ? "" : formatInput(reference.suggestedCp));
   };
-  const summary = buildSummary({ result, k, slopeLength, slopePercent, cp, soilReference, cpReference });
+  const summary = buildSummary({ result, k, slopeLength, slopePercent, cp, soilReference, cpReference, fcps });
 
   return <div className="app-layout">
     <AppSidebar activeModule="eups" onModuleChange={onModuleChange} />
@@ -83,7 +91,9 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
         {result.isComplete ? <div className="eups-complete"><CheckCircle2 />Todos os fatores necessários foram informados. Revise as escolhas antes de interpretar o resultado.</div> : <div className="eups-errors" role="status"><strong>Para concluir:</strong><span>{result.errors[0] ?? "Revise os fatores informados."}</span></div>}
       </section>
 
-      <section className="panel report-panel eups-report-panel"><PanelTitle icon={<Clipboard className="size-4" />} title="Síntese dos resultados" description="Texto local para copiar em trabalhos, pesquisas e relatórios." /><textarea value={summary} readOnly aria-label="Síntese dos resultados da EUPS" /><div className="button-row"><button className="action-button" type="button" onClick={() => void navigator.clipboard.writeText(summary).then(() => setNotice("Síntese copiada para a área de transferência."))}><Clipboard />Copiar síntese</button><button className="secondary-button" type="button" onClick={() => void exportEupsWorkbook({ result, k, slopeLength, slopePercent, cp, soilReferenceLabel: soilReference.label, cpReferenceLabel: cpReference.label }).then(() => setNotice("Planilha Excel exportada com sucesso."))}><Download />Exportar Excel</button></div></section>
+      <FcpsPanel eupsComplete={result.isComplete} soilLoss={result.soilLoss} ccsText={ccsText} onCcsChange={setCcsText} result={fcps} />
+
+      <section className="panel report-panel eups-report-panel"><PanelTitle icon={<Clipboard className="size-4" />} title="Síntese dos resultados" description="Texto local para copiar em trabalhos, pesquisas e relatórios." /><textarea value={summary} readOnly aria-label="Síntese dos resultados da EUPS" /><div className="button-row"><button className="action-button" type="button" onClick={() => void navigator.clipboard.writeText(summary).then(() => setNotice("Síntese copiada para a área de transferência."))}><Clipboard />Copiar síntese</button><button className="secondary-button" type="button" onClick={() => void exportEupsWorkbook({ result, k, slopeLength, slopePercent, cp, soilReferenceLabel: soilReference.label, cpReferenceLabel: cpReference.label, fcps }).then(() => setNotice("Planilha Excel exportada com sucesso."))}><Download />Exportar Excel</button></div></section>
       <ReferencePanel />
       {notice ? <div className="eups-notice" role="status">{notice}<button type="button" onClick={() => setNotice(null)} aria-label="Fechar aviso">×</button></div> : null}
     </main>
@@ -97,6 +107,24 @@ function Legend() { return <div className="table-legend" aria-label="Legenda de 
 function ResultSpotlight({ result, k, slopeLength, slopePercent, cp }: { result: ReturnType<typeof calculateEups>; k: number | null; slopeLength: number | null; slopePercent: number | null; cp: number | null }) { const factors: Array<{ icon: ReactNode; label: string; value: string; unit?: string; featured?: boolean }> = [{ icon: <Droplets />, label: "Precipitação anual", value: formatNumber(result.precipitationTotal, 1), unit: "mm", featured: true }, { icon: <Zap />, label: "Erosividade (R)", value: formatNumber(result.rainfallErosivity, 2) }, { icon: <Sprout />, label: "Fator K", value: formatNumber(k, 3) }, { icon: <Ruler />, label: "Comprimento (L)", value: formatNumber(slopeLength, 1), unit: "m" }, { icon: <Mountain />, label: "Declividade (S)", value: formatNumber(slopePercent, 1), unit: "%" }, { icon: <Calculator />, label: "Fator LS", value: formatNumber(result.topographicFactor, 3) }, { icon: <Leaf />, label: "Cobertura (CP)", value: formatNumber(cp, 3) }]; const classificationTone = result.classification === "Alta" ? "is-high" : result.classification === "Média" ? "is-medium" : result.classification === "Baixa" ? "is-low" : "is-pending"; const status = <div className={`eups-result-status ${result.isComplete ? "is-complete" : "is-pending"}`}><CheckCircle2 /><span>{result.isComplete ? "Todos os fatores informados" : "Cálculo pendente de informações"}</span></div>; return <div className="eups-result-spotlight" aria-live="polite"><section className="eups-result-primary"><div className="eups-result-heading"><span className="eups-result-eyebrow">Resultado principal</span><strong className="eups-result-title">Perda média anual estimada</strong></div><div className="eups-result-reading"><div className="eups-result-total"><strong>{formatNumber(result.soilLoss, 2)}</strong><div className="eups-result-support"><span>t/ha/ano</span><div className="eups-result-formula"><Calculator /><span>PS = K × R × LS × CP</span></div></div></div></div><aside className={`eups-result-classification-frame ${classificationTone}`} aria-label={`Classificação: ${result.classification ?? "Pendente"}`}><div className={`eups-result-classification ${classificationTone}`}><ResultClassificationIcon classification={result.classification} /><span>{result.classification ?? "Pendente"}</span></div></aside></section><section className="eups-result-analysis"><div className="eups-result-analysis-heading"><h3>Resumo da análise</h3>{status}</div><div className="eups-result-factors">{factors.map((factor) => <ResultFactor key={factor.label} {...factor} />)}</div></section></div>; }
 function ResultClassificationIcon({ classification }: { classification: ReturnType<typeof calculateEups>["classification"] }) { if (classification === "Alta") return <ArrowUp />; if (classification === "Baixa") return <ArrowDown />; return <Minus />; }
 function ResultFactor({ icon, label, value, unit, featured = false }: { icon: ReactNode; label: string; value: string; unit?: string; featured?: boolean }) { return <article className={`eups-result-factor ${featured ? "is-featured" : ""}`}><span className="eups-result-factor-icon">{icon}</span><span><small>{label}</small><strong>{value}{unit ? ` ${unit}` : ""}</strong></span></article>; }
+function FcpsPanel({ eupsComplete, soilLoss, ccsText, onCcsChange, result }: { eupsComplete: boolean; soilLoss: number | null; ccsText: string; onCcsChange: (value: string) => void; result: FcpsResult }) {
+  const isComplete = result.status === "complete";
+  const status = !eupsComplete
+    ? <div className="fcps-awaiting" role="status"><span>PS será disponibilizada aqui após a conclusão da EUPS.</span></div>
+    : result.status === "invalid"
+      ? <div className="eups-errors" role="status"><strong>Revise a concentração:</strong><span>{result.errors[0]}</span></div>
+      : result.status === "idle"
+        ? <div className="fcps-awaiting" role="status"><span>Informe CCS em mg/kg para calcular a quantidade potencial.</span></div>
+        : <div className="eups-complete"><CheckCircle2 />A quantidade potencial associada ao solo perdido foi estimada com os valores informados.</div>;
+
+  return <section className="panel table-panel eups-result-panel fcps-panel" aria-label="Análise complementar FCPS">
+    <div className="fcps-heading"><span className="eups-result-eyebrow">Análise complementar</span><PanelTitle icon={<Calculator className="size-4" />} title="Estimativa da quantidade de contaminante ligado ao solo perdido (FCPS)" description="Determinação da massa de contaminantes exportada via perda de solo (EUPS)." /></div>
+    <Guidance title="Como a FCPS é estimada">PS é a perda média anual de solo calculada pela EUPS. Informe CCS como a concentração de contaminante presente no solo, em mg/kg. A multiplicação relaciona essas duas grandezas e o fator 10⁻³ expressa o resultado como massa potencial por hectare e por ano.<Formula latex="QCPS = PS \times CCS \times 10^{-3}" /></Guidance>
+    <Legend />
+    <div className="table-wrap eups-final-table-wrap"><table className="eups-final-table fcps-final-table"><thead><tr><th>Fator</th><th>Valor</th><th>Unidade</th><th>Tipo</th><th>Referência ou cálculo</th></tr></thead><tbody><CalculationRow factor="PS" value={formatNumber(soilLoss, 2)} unit="t/ha/ano" type="Saída EUPS" calculation="Perda média anual calculada na tabela anterior" output /><tr className="eups-input-row"><th scope="row"><span className="eups-factor-code">CCS</span></th><td className="input-cell"><input id="fcps-ccs" aria-label="Concentração de contaminante no solo (CCS)" inputMode="decimal" value={ccsText} placeholder={eupsComplete ? "Informar valor" : "Aguardando PS"} disabled={!eupsComplete} onChange={(event) => onCcsChange(event.target.value)} /></td><td>mg/kg</td><td><span className="eups-type-tag input">Entrada manual</span></td><td>Concentração informada para o solo estudado</td></tr></tbody><tfoot><tr className="eups-final-result-row"><th scope="row"><span>QCPS</span></th><td className="eups-final-value" aria-label="QCPS calculada">{isComplete ? formatNumber(result.quantity, 5) : "—"}</td><td>kg/ha/ano</td><td><span className="eups-type-tag result">Resultado</span></td><td><strong>QCPS = PS × CCS × 10⁻³</strong><span>{isComplete ? "Estimativa calculada" : "Aguardando dados"}</span></td></tr></tfoot></table></div>
+    {status}
+  </section>;
+}
 function CalculationRow({ factor, value, unit, type, calculation, output = false }: { factor: string; value: string; unit: string; type: string; calculation: string; output?: boolean }) { const typeLabel = type === "Entrada" ? "Entrada manual" : type; return <tr className={output ? "eups-output-row" : "eups-input-row"}><th scope="row"><span className="eups-factor-code">{factor}</span></th><td className={output ? "output-cell" : "input-cell"}><strong>{value}</strong></td><td>{unit}</td><td><span className={`eups-type-tag ${output ? "output" : "input"}`}>{typeLabel}</span></td><td>{calculation}</td></tr>; }
 function ReferencePanel() { return <section className="panel reference-panel"><PanelTitle icon={<BookOpen className="size-4" />} title="Referências e fontes" description="Créditos metodológicos e limites de uso das referências didáticas do módulo." /><div className="reference-grid eups-reference-grid">{EUPS_REFERENCE_SOURCES.map((source) => <ReferenceCard key={source.label} source={source} />)}</div></section>; }
 function ReferenceCard({ source }: { source: ReferenceSource }) { return <article className="reference-card">{source.href ? <a href={source.href} target="_blank" rel="noreferrer">{source.label}</a> : <strong>{source.label}</strong>}<span>{source.description}</span></article>; }
@@ -104,4 +132,4 @@ function PanelTitle({ icon, title, description }: { icon: ReactNode; title: stri
 function parseDecimal(value: string): number | null { const normalized = value.trim().replace(",", "."); if (!normalized || normalized === "-" || normalized.endsWith(".")) return null; const numeric = Number(normalized); return Number.isFinite(numeric) ? numeric : null; }
 function formatInput(value: number): string { return value.toLocaleString("pt-BR", { maximumFractionDigits: 3 }); }
 function formatNumber(value: number | null | undefined, digits = 1): string { return value === null || value === undefined || !Number.isFinite(value) ? "-" : value.toLocaleString("pt-BR", { minimumFractionDigits: digits, maximumFractionDigits: digits }); }
-function buildSummary({ result, k, slopeLength, slopePercent, cp, soilReference, cpReference }: { result: ReturnType<typeof calculateEups>; k: number | null; slopeLength: number | null; slopePercent: number | null; cp: number | null; soilReference: EupsSoilReference; cpReference: EupsCpReference }) { return ["Síntese dos resultados — Perda de Solo (EUPS)", "", "Método: cálculo manual com 12 precipitações mensais, conforme a Tabela de referência EUPS.", `Situação: ${result.isComplete ? "cálculo concluído" : "pendente de entradas ou revisão"}`, "", "Chuva e erosividade:", `- Precipitação anual (P): ${formatNumber(result.precipitationTotal, 1)} mm`, `- Erosividade (R): ${formatNumber(result.rainfallErosivity, 2)} MJ·mm·ha⁻¹·h⁻¹·ano⁻¹`, "", "Fatores adotados:", `- Referência de solo: ${soilReference.label}`, `- K: ${formatNumber(k, 3)}`, `- L: ${formatNumber(slopeLength, 1)} m`, `- S: ${formatNumber(slopePercent, 1)} %`, `- LS: ${formatNumber(result.topographicFactor, 3)}`, `- Referência de CP: ${cpReference.label}`, `- CP: ${formatNumber(cp, 3)}`, "", `Perda média anual estimada (PS): ${formatNumber(result.soilLoss, 2)} t/ha/ano`, `Classificação: ${result.classification ?? "não calculada"}`, "", "Referências: Tabela de referência EUPS; Wischmeier e Smith (1965), USDA Agriculture Handbook No. 282."].join("\n"); }
+function buildSummary({ result, k, slopeLength, slopePercent, cp, soilReference, cpReference, fcps }: { result: ReturnType<typeof calculateEups>; k: number | null; slopeLength: number | null; slopePercent: number | null; cp: number | null; soilReference: EupsSoilReference; cpReference: EupsCpReference; fcps: FcpsResult }) { const complementaryAnalysis = fcps.status === "complete" ? ["", "Análise complementar — FCPS:", `- Perda de solo utilizada (PS): ${formatNumber(fcps.soilLoss, 2)} t/ha/ano`, `- Concentração no solo (CCS): ${formatNumber(fcps.concentration, 3)} mg/kg`, `- Quantidade potencial associada ao solo perdido (QCPS): ${formatNumber(fcps.quantity, 5)} kg/ha/ano`, "- Fórmula: QCPS = PS × CCS × 10⁻³."] : []; return ["Síntese dos resultados — Perda de Solo (EUPS)", "", "Método: cálculo manual com 12 precipitações mensais, conforme a Tabela de referência EUPS.", `Situação: ${result.isComplete ? "cálculo concluído" : "pendente de entradas ou revisão"}`, "", "Chuva e erosividade:", `- Precipitação anual (P): ${formatNumber(result.precipitationTotal, 1)} mm`, `- Erosividade (R): ${formatNumber(result.rainfallErosivity, 2)} MJ·mm·ha⁻¹·h⁻¹·ano⁻¹`, "", "Fatores adotados:", `- Referência de solo: ${soilReference.label}`, `- K: ${formatNumber(k, 3)}`, `- L: ${formatNumber(slopeLength, 1)} m`, `- S: ${formatNumber(slopePercent, 1)} %`, `- LS: ${formatNumber(result.topographicFactor, 3)}`, `- Referência de CP: ${cpReference.label}`, `- CP: ${formatNumber(cp, 3)}`, "", `Perda média anual estimada (PS): ${formatNumber(result.soilLoss, 2)} t/ha/ano`, `Classificação: ${result.classification ?? "não calculada"}`, ...complementaryAnalysis, "", "Referências: Tabela de referência EUPS; Wischmeier e Smith (1965), USDA Agriculture Handbook No. 282."].join("\n"); }
