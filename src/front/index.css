@@ -165,6 +165,40 @@ button:disabled {
 .eups-step-guidance > div { display: grid; gap: 8px; color: var(--muted); font-size: 0.85rem; line-height: 1.55; }
 .eups-step-guidance small { color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
 .eups-step-guidance .formula .katex-display { margin: 2px 0 0; padding: 0; font-size: 0.84rem; text-align: left; }
+.eups-rainfall-import { display: grid; grid-template-columns: minmax(300px, 0.46fr) minmax(0, 0.54fr); gap: 14px; margin-bottom: 14px; padding: 13px; border: 1px solid rgb(0 155 110 / 0.24); border-radius: 8px; background: #fbfdfb; }
+.eups-rainfall-import-controls { display: grid; align-content: start; gap: 13px; min-width: 0; }
+.eups-rainfall-import-heading { display: grid; gap: 5px; }
+.eups-rainfall-import-heading h3 { margin: 0; color: var(--brand-dark); font-family: "Roboto Slab", Georgia, serif; font-size: 1rem; }
+.eups-rainfall-import-heading p { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
+.eups-rainfall-coordinate-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.eups-rainfall-coordinate-message { margin: -4px 0 0; color: var(--muted); font-size: 0.76rem; font-weight: 700; line-height: 1.4; }
+.eups-rainfall-coordinate-message.is-error { color: var(--warning); }
+.eups-rainfall-station-card { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 10px; border: 1px solid rgb(0 155 110 / 0.3); border-radius: 7px; background: #edf8f1; }
+.eups-rainfall-station-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--brand-green); color: #fff; }
+.eups-rainfall-station-icon svg { width: 18px; height: 18px; }
+.eups-rainfall-station-card > div:nth-child(2) { display: grid; min-width: 0; gap: 2px; }
+.eups-rainfall-station-card > div:nth-child(2) > span, .eups-rainfall-station-card small { color: var(--muted); font-size: 0.68rem; font-weight: 800; }
+.eups-rainfall-station-card > div:nth-child(2) > strong { overflow: hidden; color: var(--brand-dark); font-size: 0.82rem; text-overflow: ellipsis; white-space: nowrap; }
+.eups-rainfall-period { display: grid; gap: 2px; padding-left: 9px; border-left: 1px solid rgb(0 155 110 / 0.24); text-align: right; }
+.eups-rainfall-period span { color: var(--brand-green); font-size: 0.63rem; font-weight: 900; letter-spacing: 0.07em; }
+.eups-rainfall-period strong { color: var(--brand-dark); font-family: "Roboto Slab", Georgia, serif; font-size: 0.82rem; }
+.eups-rainfall-station-card > p { grid-column: 2 / -1; margin: 0; color: var(--brand-dark); font-size: 0.72rem; font-weight: 800; }
+.eups-rainfall-map { position: relative; min-height: 300px; }
+.eups-rainfall-map .map-frame { min-height: 300px; height: 100%; }
+.eups-map-expand-button { position: absolute; top: 10px; left: 10px; z-index: 500; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 6px 9px; border: 1px solid rgb(26 59 41 / 0.28); border-radius: 5px; background: rgb(251 253 251 / 0.94); box-shadow: 0 2px 8px rgb(26 59 41 / 0.12); color: var(--brand-dark); font-size: 0.72rem; font-weight: 900; }
+.eups-map-expand-button:hover { border-color: var(--brand-green); background: #edf8f1; }
+.eups-map-expand-button svg { width: 15px; height: 15px; color: var(--brand-green); }
+.eups-map-modal-backdrop { position: fixed; inset: 0; z-index: 1400; display: grid; place-items: center; padding: 24px; background: rgb(26 59 41 / 0.64); }
+.eups-map-modal { display: grid; grid-template-rows: auto minmax(0, 1fr); width: min(1180px, 100%); height: min(75vh, 860px); overflow: hidden; border: 1px solid rgb(0 155 110 / 0.32); border-radius: 10px; background: #fbfdfb; box-shadow: 0 26px 80px rgb(8 31 20 / 0.36); }
+.eups-map-modal-header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 0.76fr) auto; align-items: center; gap: 16px; padding: 15px 17px 14px; border-bottom: 1px solid rgb(0 155 110 / 0.2); background: #f6fbf8; }
+.eups-map-modal-heading { display: grid; min-width: 0; gap: 4px; }
+.eups-map-modal-header h2 { margin: 0; color: var(--brand-dark); font-family: "Roboto Slab", Georgia, serif; font-size: 1.15rem; }
+.eups-map-modal-header p { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.45; }
+.eups-map-modal-station { min-width: 280px; margin: 0; }
+.eups-map-modal-close { display: grid; grid-column: 3; flex: 0 0 auto; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid rgb(0 155 110 / 0.28); border-radius: 5px; background: #fff; color: var(--brand-dark); }
+.eups-map-modal-close:hover { border-color: var(--brand-green); background: #edf8f1; }
+.eups-map-modal-close svg { width: 18px; height: 18px; }
+.eups-map-modal .map-frame { min-height: 0; height: 100%; border: 0; border-radius: 0; }
 .eups-rainfall-table { min-width: 680px; }
 .eups-rainfall-table th, .eups-rainfall-table td { text-align: left; }
 .eups-rainfall-table th:nth-child(1), .eups-rainfall-table td:nth-child(1) { width: 44%; }
@@ -261,6 +295,8 @@ button:disabled {
 
 @media (max-width: 900px) {
   .eups-input-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .eups-rainfall-import { grid-template-columns: 1fr; }
+  .eups-rainfall-map .map-frame { min-height: 330px; }
   .eups-result-spotlight { grid-template-columns: minmax(280px, 0.86fr) minmax(0, 1.14fr); gap: 12px; }
   .eups-result-factors { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
@@ -272,6 +308,15 @@ button:disabled {
 
 @media (max-width: 680px) {
   .eups-reference-grid, .eups-input-grid { grid-template-columns: 1fr; }
+  .eups-rainfall-coordinate-grid { grid-template-columns: 1fr; }
+  .eups-rainfall-station-card { grid-template-columns: 34px minmax(0, 1fr); }
+  .eups-rainfall-period { grid-column: 2; padding: 6px 0 0; border-top: 1px solid rgb(0 155 110 / 0.24); border-left: 0; text-align: left; }
+  .eups-map-modal-backdrop { padding: 10px; }
+  .eups-map-modal { width: 100%; height: min(88dvh, 760px); }
+  .eups-map-modal-header { grid-template-columns: minmax(0, 1fr) auto; align-items: start; padding: 13px; }
+  .eups-map-modal-header p { font-size: 0.74rem; }
+  .eups-map-modal-station { grid-column: 1 / -1; min-width: 0; }
+  .eups-map-modal-close { grid-column: 2; }
   .eups-result-spotlight { grid-template-columns: 1fr; gap: 12px; padding: 16px; }
   .eups-result-primary { grid-template-columns: minmax(0, 1fr) 118px; padding: 16px; }
   .eups-result-classification-frame { width: 114px; height: 114px; }

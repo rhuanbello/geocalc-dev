@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   getInmetNormalsDataset,
   getInmetStationByCode,
+  findNearestInmetStation,
   inmetStationLabel,
   inmetStationToMonthlyInputs,
   listInmetStations,
@@ -64,6 +65,13 @@ describe("INMET normals dataset", () => {
     expect(getInmetStationByCode("83377")?.name).toBe("BRASILIA");
     expect(searchInmetStations("brasilia").some((station) => station.code === "83377")).toBe(true);
     expect(searchInmetStations("DF").some((station) => station.code === "83377")).toBe(true);
+  });
+
+  test("finds the nearest station from coordinates in the selected normal period", () => {
+    const nearest = findNearestInmetStation({ latitude: -15.7801, longitude: -47.9292 }, "1991-2020");
+
+    expect(nearest.station.code).toBe("83377");
+    expect(nearest.distanceKm).toBeLessThan(2);
   });
 
   test("converts a station into water balance monthly inputs", () => {

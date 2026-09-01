@@ -441,6 +441,75 @@ describe("App spreadsheet parity", () => {
     expect(screen.queryByText("Importar precipitação")).toBeNull();
   });
 
+  test("preenche a chuva EUPS pela estação INMET mais próxima e mantém ajustes manuais", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+
+    fireEvent.change(screen.getByLabelText("Latitude para estação INMET"), { target: { value: "-15,7801" } });
+    fireEvent.change(screen.getByLabelText("Longitude para estação INMET"), { target: { value: "-47,9292" } });
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).toBe("206");
+    });
+    expect(screen.getByText("83377 - BRASILIA, DF")).toBeTruthy();
+    expect(screen.getByText("1991–2020")).toBeTruthy();
+    expect(screen.getByText(/km de distância/)).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Precipitação de Janeiro"), { target: { value: "207" } });
+    expect(screen.getByText("Valores ajustados manualmente após o preenchimento.")).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Latitude para estação INMET"), { target: { value: "100" } });
+    expect(screen.getByText(/Use latitude entre/)).toBeTruthy();
+    expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).toBe("207");
+  });
+
+  test("seleciona uma estação INMET diretamente no mapa da EUPS", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    await user.click(screen.getByText("Selecionar estação INMET no mapa"));
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).not.toBe("");
+    });
+    expect((screen.getByLabelText("Latitude para estação INMET") as HTMLInputElement).value).not.toBe("");
+    expect((screen.getByLabelText("Longitude para estação INMET") as HTMLInputElement).value).not.toBe("");
+  });
+
+  test("abre e fecha o mapa ampliado da EUPS sem perder o contexto da seleção", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    fireEvent.change(screen.getByLabelText("Latitude para estação INMET"), { target: { value: "-15,7801" } });
+    fireEvent.change(screen.getByLabelText("Longitude para estação INMET"), { target: { value: "-47,9292" } });
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).toBe("206");
+    });
+
+    await user.click(screen.getByRole("button", { name: "Abrir mapa ampliado" }));
+    const dialog = screen.getByRole("dialog", { name: "Mapa de estações INMET" });
+    expect(dialog.textContent).toContain("83377 - BRASILIA, DF");
+    expect(dialog.textContent).toContain("INMET");
+    expect(dialog.textContent).toContain("1991–2020");
+    expect(dialog.textContent).toMatch(/km de distância/);
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Mapa de estações INMET" })).toBeNull();
+  });
+
+  test("permite fechar o mapa ampliado da EUPS antes de selecionar uma estação", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    await user.click(screen.getByRole("button", { name: "Abrir mapa ampliado" }));
+
+    expect(screen.getByRole("button", { name: "Fechar mapa ampliado" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Fechar mapa ampliado" }));
+    expect(screen.queryByRole("dialog", { name: "Mapa de estações INMET" })).toBeNull();
+  });
+
   test("aplica referências didáticas de K e CP sem preencher fatores espaciais", async () => {
     const user = userEvent.setup();
     render(<App />);

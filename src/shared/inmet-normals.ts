@@ -26,6 +26,11 @@ export type InmetNormalsDataset = {
   stations: InmetNormalStation[];
 };
 
+export type InmetNearestStation = {
+  station: InmetNormalStation;
+  distanceKm: number;
+};
+
 export const DEFAULT_INMET_NORMAL_PERIOD: InmetNormalPeriod = "1991-2020";
 
 const datasets: Record<InmetNormalPeriod, InmetNormalsDataset> = {
@@ -79,6 +84,28 @@ export function searchInmetStations(
     .slice(0, 40);
 }
 
+export function findNearestInmetStation(
+  point: { latitude: number; longitude: number },
+  period: InmetNormalPeriod = DEFAULT_INMET_NORMAL_PERIOD,
+): InmetNearestStation {
+  const nearest = listInmetStations(period).reduce<InmetNearestStation | null>(
+    (closest, station) => {
+      const distanceKm = geographicDistanceKm(point, station);
+      if (!closest || distanceKm < closest.distanceKm || (distanceKm === closest.distanceKm && station.code.localeCompare(closest.station.code) < 0)) {
+        return { station, distanceKm };
+      }
+      return closest;
+    },
+    null,
+  );
+
+  if (!nearest) {
+    throw new Error(`Nenhuma estação INMET disponível para ${period}.`);
+  }
+
+  return nearest;
+}
+
 export function inmetStationToMonthlyInputs(
   station: InmetNormalStation,
 ): MonthlyInput[] {
@@ -98,4 +125,18 @@ function normalizeSearchText(value: string): string {
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
     .trim();
+}
+
+function geographicDistanceKm(
+  first: { latitude: number; longitude: number },
+  second: { latitude: number; longitude: number },
+): number {
+  const earthRadiusKm = 6371.0088;
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+  const latitudeDelta = toRadians(second.latitude - first.latitude);
+  const longitudeDelta = toRadians(second.longitude - first.longitude);
+  const latitude1 = toRadians(first.latitude);
+  const latitude2 = toRadians(second.latitude);
+  const haversine = Math.sin(latitudeDelta / 2) ** 2 + Math.cos(latitude1) * Math.cos(latitude2) * Math.sin(longitudeDelta / 2) ** 2;
+  return 2 * earthRadiusKm * Math.asin(Math.sqrt(haversine));
 }
