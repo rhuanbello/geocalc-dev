@@ -3,19 +3,27 @@ import { EMPTY_EUPS_RAINFALL, EUPS_MONTHS, calculateEups, type EupsRainfallInput
 import { EUPS_METHODOLOGY, EUPS_REFERENCE_SOURCES } from "$/eups-academic";
 import { EUPS_CP_REFERENCES, EUPS_SOIL_REFERENCES, type EupsCpReference, type EupsSoilReference } from "$/eups-references";
 import { calculateFcps, type FcpsResult } from "$/fcps";
+import { findNearestInmetStation, inmetStationLabel, listInmetStations, type InmetNormalStation } from "$/inmet-normals";
 import { AppSidebar, type GeoCalcModule } from "@/components/AppSidebar";
 import { Formula } from "@/components/Formula";
+import { MapPicker, type MapPoint } from "@/components/MapPicker";
 import { StaticCombobox } from "@/components/StaticCombobox";
 import { exportEupsWorkbook } from "@/lib/eups-excel-export";
 import "katex/dist/katex.min.css";
-import { ArrowDown, ArrowUp, BookOpen, Calculator, CheckCircle2, Clipboard, Download, Droplets, Leaf, Minus, Mountain, Ruler, Sprout, Zap } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { ArrowDown, ArrowUp, BookOpen, Calculator, CheckCircle2, Clipboard, Download, Droplets, Leaf, MapPin, Minus, Mountain, Ruler, Sprout, Zap } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 const SOIL_OPTIONS: Array<{ value: EupsSoilReference["id"]; label: string; description: string }> = EUPS_SOIL_REFERENCES.map((reference) => ({ value: reference.id, label: reference.label, description: reference.description }));
 const CP_OPTIONS: Array<{ value: EupsCpReference["id"]; label: string; description: string }> = EUPS_CP_REFERENCES.map((reference) => ({ value: reference.id, label: reference.label, description: reference.description }));
+const EUPS_INMET_PERIOD = "1991-2020" as const;
 
 export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcModule) => void }) {
   const [rainfallTexts, setRainfallTexts] = useState<string[]>(EMPTY_EUPS_RAINFALL.map(() => ""));
+  const [rainfallLatitudeText, setRainfallLatitudeText] = useState("");
+  const [rainfallLongitudeText, setRainfallLongitudeText] = useState("");
+  const [rainfallPoint, setRainfallPoint] = useState<MapPoint | null>(null);
+  const [selectedRainfallStationCode, setSelectedRainfallStationCode] = useState<string | null>(null);
+  const [rainfallHasManualAdjustments, setRainfallHasManualAdjustments] = useState(false);
   const [soilReferenceId, setSoilReferenceId] = useState<EupsSoilReference["id"]>("custom");
   const [cpReferenceId, setCpReferenceId] = useState<EupsCpReference["id"]>("custom");
   const [kText, setKText] = useState("");
@@ -26,6 +34,11 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
   const [notice, setNotice] = useState<string | null>(null);
 
   const rainfall = useMemo<EupsRainfallInput[]>(() => rainfallTexts.map(parseDecimal), [rainfallTexts]);
+  const rainfallLatitude = parseDecimal(rainfallLatitudeText);
+  const rainfallLongitude = parseDecimal(rainfallLongitudeText);
+  const rainfallCoordinatesAreValid = rainfallLatitude !== null && rainfallLongitude !== null && rainfallLatitude >= -90 && rainfallLatitude <= 90 && rainfallLongitude >= -180 && rainfallLongitude <= 180;
+  const selectedRainfallStation = useMemo(() => selectedRainfallStationCode ? listInmetStations(EUPS_INMET_PERIOD).find((station) => station.code === selectedRainfallStationCode) ?? null : null, [selectedRainfallStationCode]);
+  const rainfallStationMatch = useMemo(() => rainfallPoint ? findNearestInmetStation(rainfallPoint, EUPS_INMET_PERIOD) : null, [rainfallPoint]);
   const k = parseDecimal(kText);
   const slopeLength = parseDecimal(slopeLengthText);
   const slopePercent = parseDecimal(slopeText);
@@ -40,6 +53,16 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
     concentrationProvided: ccsText.trim().length > 0,
   }), [result.isComplete, result.soilLoss, ccs, ccsText]);
 
+  useEffect(() => {
+    if (!rainfallCoordinatesAreValid || rainfallLatitude === null || rainfallLongitude === null) return;
+    const point = { latitude: rainfallLatitude, longitude: rainfallLongitude };
+    const nearest = findNearestInmetStation(point, EUPS_INMET_PERIOD);
+    setRainfallPoint(point);
+    setSelectedRainfallStationCode(nearest.station.code);
+    setRainfallTexts(nearest.station.precipitation.map(formatInput));
+    setRainfallHasManualAdjustments(false);
+  }, [rainfallCoordinatesAreValid, rainfallLatitude, rainfallLongitude]);
+
   const selectSoilReference = (id: EupsSoilReference["id"]) => {
     const reference = EUPS_SOIL_REFERENCES.find((item) => item.id === id)!;
     setSoilReferenceId(id);
@@ -49,6 +72,23 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
     const reference = EUPS_CP_REFERENCES.find((item) => item.id === id)!;
     setCpReferenceId(id);
     setCpText(reference.suggestedCp === null ? "" : formatInput(reference.suggestedCp));
+  };
+  const selectRainfallStation = (station: InmetNormalStation) => {
+    setRainfallLatitudeText(formatCoordinateInput(station.latitude));
+    setRainfallLongitudeText(formatCoordinateInput(station.longitude));
+    setRainfallPoint({ latitude: station.latitude, longitude: station.longitude });
+    setSelectedRainfallStationCode(station.code);
+    setRainfallTexts(station.precipitation.map(formatInput));
+    setRainfallHasManualAdjustments(false);
+  };
+  const updateRainfallPoint = (point: MapPoint) => {
+    setRainfallLatitudeText(formatCoordinateInput(point.latitude));
+    setRainfallLongitudeText(formatCoordinateInput(point.longitude));
+    setRainfallPoint(point);
+  };
+  const updateRainfallText = (index: number, value: string) => {
+    setRainfallTexts((values) => values.map((current, itemIndex) => itemIndex === index ? value : current));
+    if (selectedRainfallStationCode) setRainfallHasManualAdjustments(true);
   };
   const summary = buildSummary({ result, k, slopeLength, slopePercent, cp, soilReference, cpReference, fcps });
 
@@ -61,8 +101,9 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
       <section className="panel eups-input-panel">
         <PanelTitle icon={<Droplets className="size-4" />} title="Chuva e erosividade" />
         <Guidance title="O que informar">Informe a precipitação média de cada mês, em milímetros. Os 12 meses formam a precipitação anual P; o GeoCalc calcula I30 para cada mês e soma os resultados no fator R.<Formula latex="I30 = 67{,}355 \times \left(\frac{r^2}{P}\right)^{0{,}85} \qquad R = \sum I30" /></Guidance>
+        <RainfallStationImport latitudeText={rainfallLatitudeText} longitudeText={rainfallLongitudeText} coordinatesAreValid={rainfallCoordinatesAreValid} point={rainfallPoint} station={selectedRainfallStation} distanceKm={rainfallStationMatch?.distanceKm ?? null} hasManualAdjustments={rainfallHasManualAdjustments} onLatitudeChange={setRainfallLatitudeText} onLongitudeChange={setRainfallLongitudeText} onPointChange={updateRainfallPoint} onStationSelect={selectRainfallStation} />
         <Legend />
-        <div className="table-wrap eups-rainfall-table-wrap"><table className="eups-rainfall-table"><thead><tr><th>Mês</th><th className="input-column">r (mm)</th><th className="output-column">I30</th></tr></thead><tbody>{EUPS_MONTHS.map((month, index) => <tr key={month}><td>{month}</td><td className="input-cell"><input inputMode="decimal" aria-label={`Precipitação de ${month}`} value={rainfallTexts[index] ?? ""} onChange={(event) => setRainfallTexts((values) => values.map((value, itemIndex) => itemIndex === index ? event.target.value : value))} /></td><td className="output-cell">{formatNumber(result.rows[index]?.erosivityIndex, 2)}</td></tr>)}</tbody><tfoot><tr><td>Precipitação anual / R</td><td>{formatNumber(result.precipitationTotal, 1)}</td><td>{formatNumber(result.rainfallErosivity, 2)}</td></tr></tfoot></table></div>
+        <div className="table-wrap eups-rainfall-table-wrap"><table className="eups-rainfall-table"><thead><tr><th>Mês</th><th className="input-column">r (mm)</th><th className="output-column">I30</th></tr></thead><tbody>{EUPS_MONTHS.map((month, index) => <tr key={month}><td>{month}</td><td className="input-cell"><input inputMode="decimal" aria-label={`Precipitação de ${month}`} value={rainfallTexts[index] ?? ""} onChange={(event) => updateRainfallText(index, event.target.value)} /></td><td className="output-cell">{formatNumber(result.rows[index]?.erosivityIndex, 2)}</td></tr>)}</tbody><tfoot><tr><td>Precipitação anual / R</td><td>{formatNumber(result.precipitationTotal, 1)}</td><td>{formatNumber(result.rainfallErosivity, 2)}</td></tr></tfoot></table></div>
       </section>
 
       <section className="panel eups-input-panel">
@@ -104,6 +145,11 @@ function ModuleHeader() { return <header className="module-header eups-header" i
 function MethodologyPanel() { return <section className="panel methodology-panel eups-methodology-panel"><PanelTitle icon={<BookOpen className="size-4" />} title="Conceitos básicos e metodologia" description="Uma introdução à EUPS antes das tabelas de cálculo." /><div className="methodology-grid">{EUPS_METHODOLOGY.map((section) => <article key={section.title} className="methodology-card"><h3>{section.title}</h3><p>{section.body}</p>{section.formulas?.length ? <div className="methodology-card-formulas">{section.formulas.map((formula) => <Formula key={formula} latex={formula} className="formula" />)}</div> : null}</article>)}</div></section>; }
 function Guidance({ title, children }: { title: string; children: ReactNode }) { return <div className="eups-step-guidance"><strong>{title}</strong><div>{children}</div></div>; }
 function Legend() { return <div className="table-legend" aria-label="Legenda de entrada e saída"><div><span className="legend-swatch input-swatch" />Entrada manual</div><div><span className="legend-swatch output-swatch" />Saída calculada</div></div>; }
+function RainfallStationImport({ latitudeText, longitudeText, coordinatesAreValid, point, station, distanceKm, hasManualAdjustments, onLatitudeChange, onLongitudeChange, onPointChange, onStationSelect }: { latitudeText: string; longitudeText: string; coordinatesAreValid: boolean; point: MapPoint | null; station: InmetNormalStation | null; distanceKm: number | null; hasManualAdjustments: boolean; onLatitudeChange: (value: string) => void; onLongitudeChange: (value: string) => void; onPointChange: (point: MapPoint) => void; onStationSelect: (station: InmetNormalStation) => void }) {
+  const hasCoordinateText = Boolean(latitudeText.trim() || longitudeText.trim());
+  const coordinateMessage = !hasCoordinateText ? "Informe uma coordenada ou escolha uma estação no mapa." : coordinatesAreValid ? null : "Use latitude entre −90 e 90 e longitude entre −180 e 180.";
+  return <section className="eups-rainfall-import" aria-label="Preenchimento INMET por coordenadas"><div className="eups-rainfall-import-controls"><div className="eups-rainfall-import-heading"><span className="eups-result-eyebrow">Preenchimento automático</span><h3>Estação INMET mais próxima</h3><p>Use as coordenadas do local para preencher as precipitações mensais pela normal climatológica disponível.</p></div><div className="eups-rainfall-coordinate-grid"><label className="eups-number-field" htmlFor="eups-rainfall-latitude"><span>Latitude <small>graus decimais</small></span><input id="eups-rainfall-latitude" aria-label="Latitude para estação INMET" inputMode="decimal" value={latitudeText} placeholder="Ex.: −15,7801" onChange={(event) => onLatitudeChange(event.target.value)} /></label><label className="eups-number-field" htmlFor="eups-rainfall-longitude"><span>Longitude <small>graus decimais</small></span><input id="eups-rainfall-longitude" aria-label="Longitude para estação INMET" inputMode="decimal" value={longitudeText} placeholder="Ex.: −47,9292" onChange={(event) => onLongitudeChange(event.target.value)} /></label></div>{coordinateMessage ? <p className={`eups-rainfall-coordinate-message ${hasCoordinateText ? "is-error" : ""}`}>{coordinateMessage}</p> : null}{station ? <div className="eups-rainfall-station-card"><div className="eups-rainfall-station-icon"><MapPin /></div><div><span>Estação selecionada</span><strong>{inmetStationLabel(station)}</strong><small>{distanceKm === null ? "Localização da estação" : `${formatDistance(distanceKm)} do ponto informado`}</small></div><div className="eups-rainfall-period"><span>INMET</span><strong>1991–2020</strong></div>{hasManualAdjustments ? <p>Valores ajustados manualmente após o preenchimento.</p> : null}</div> : null}</div><MapPicker point={point} onPointChange={onPointChange} stations={listInmetStations(EUPS_INMET_PERIOD)} selectedStationCode={station?.code ?? null} onStationSelect={onStationSelect} /></section>;
+}
 function ResultSpotlight({ result, k, slopeLength, slopePercent, cp }: { result: ReturnType<typeof calculateEups>; k: number | null; slopeLength: number | null; slopePercent: number | null; cp: number | null }) { const factors: Array<{ icon: ReactNode; label: string; value: string; unit?: string; featured?: boolean }> = [{ icon: <Droplets />, label: "Precipitação anual", value: formatNumber(result.precipitationTotal, 1), unit: "mm", featured: true }, { icon: <Zap />, label: "Erosividade (R)", value: formatNumber(result.rainfallErosivity, 2) }, { icon: <Sprout />, label: "Fator K", value: formatNumber(k, 3) }, { icon: <Ruler />, label: "Comprimento (L)", value: formatNumber(slopeLength, 1), unit: "m" }, { icon: <Mountain />, label: "Declividade (S)", value: formatNumber(slopePercent, 1), unit: "%" }, { icon: <Calculator />, label: "Fator LS", value: formatNumber(result.topographicFactor, 3) }, { icon: <Leaf />, label: "Cobertura (CP)", value: formatNumber(cp, 3) }]; const classificationTone = result.classification === "Alta" ? "is-high" : result.classification === "Média" ? "is-medium" : result.classification === "Baixa" ? "is-low" : "is-pending"; const status = <div className={`eups-result-status ${result.isComplete ? "is-complete" : "is-pending"}`}><CheckCircle2 /><span>{result.isComplete ? "Todos os fatores informados" : "Cálculo pendente de informações"}</span></div>; return <div className="eups-result-spotlight" aria-live="polite"><section className="eups-result-primary"><div className="eups-result-heading"><span className="eups-result-eyebrow">Resultado principal</span><strong className="eups-result-title">Perda média anual estimada</strong></div><div className="eups-result-reading"><div className="eups-result-total"><strong>{formatNumber(result.soilLoss, 2)}</strong><div className="eups-result-support"><span>t/ha/ano</span><div className="eups-result-formula"><Calculator /><span>PS = K × R × LS × CP</span></div></div></div></div><aside className={`eups-result-classification-frame ${classificationTone}`} aria-label={`Classificação: ${result.classification ?? "Pendente"}`}><div className={`eups-result-classification ${classificationTone}`}><ResultClassificationIcon classification={result.classification} /><span>{result.classification ?? "Pendente"}</span></div></aside></section><section className="eups-result-analysis"><div className="eups-result-analysis-heading"><h3>Resumo da análise</h3>{status}</div><div className="eups-result-factors">{factors.map((factor) => <ResultFactor key={factor.label} {...factor} />)}</div></section></div>; }
 function ResultClassificationIcon({ classification }: { classification: ReturnType<typeof calculateEups>["classification"] }) { if (classification === "Alta") return <ArrowUp />; if (classification === "Baixa") return <ArrowDown />; return <Minus />; }
 function ResultFactor({ icon, label, value, unit, featured = false }: { icon: ReactNode; label: string; value: string; unit?: string; featured?: boolean }) { return <article className={`eups-result-factor ${featured ? "is-featured" : ""}`}><span className="eups-result-factor-icon">{icon}</span><span><small>{label}</small><strong>{value}{unit ? ` ${unit}` : ""}</strong></span></article>; }
@@ -131,5 +177,7 @@ function ReferenceCard({ source }: { source: ReferenceSource }) { return <articl
 function PanelTitle({ icon, title, description }: { icon: ReactNode; title: string; description?: string }) { return <div className="panel-title"><div className="panel-title-icon">{icon}</div><div><h2>{title}</h2>{description ? <p>{description}</p> : null}</div></div>; }
 function parseDecimal(value: string): number | null { const normalized = value.trim().replace(",", "."); if (!normalized || normalized === "-" || normalized.endsWith(".")) return null; const numeric = Number(normalized); return Number.isFinite(numeric) ? numeric : null; }
 function formatInput(value: number): string { return value.toLocaleString("pt-BR", { maximumFractionDigits: 3 }); }
+function formatCoordinateInput(value: number): string { return value.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 }); }
+function formatDistance(value: number): string { return `${value.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km de distância`; }
 function formatNumber(value: number | null | undefined, digits = 1): string { return value === null || value === undefined || !Number.isFinite(value) ? "-" : value.toLocaleString("pt-BR", { minimumFractionDigits: digits, maximumFractionDigits: digits }); }
 function buildSummary({ result, k, slopeLength, slopePercent, cp, soilReference, cpReference, fcps }: { result: ReturnType<typeof calculateEups>; k: number | null; slopeLength: number | null; slopePercent: number | null; cp: number | null; soilReference: EupsSoilReference; cpReference: EupsCpReference; fcps: FcpsResult }) { const complementaryAnalysis = fcps.status === "complete" ? ["", "Análise complementar — FCPS:", `- Perda de solo utilizada (PS): ${formatNumber(fcps.soilLoss, 2)} t/ha/ano`, `- Concentração no solo (CCS): ${formatNumber(fcps.concentration, 3)} mg/kg`, `- Quantidade potencial associada ao solo perdido (QCPS): ${formatNumber(fcps.quantity, 5)} kg/ha/ano`, "- Fórmula: QCPS = PS × CCS × 10⁻³."] : []; return ["Síntese dos resultados — Perda de Solo (EUPS)", "", "Método: cálculo manual com 12 precipitações mensais, conforme a Tabela de referência EUPS.", `Situação: ${result.isComplete ? "cálculo concluído" : "pendente de entradas ou revisão"}`, "", "Chuva e erosividade:", `- Precipitação anual (P): ${formatNumber(result.precipitationTotal, 1)} mm`, `- Erosividade (R): ${formatNumber(result.rainfallErosivity, 2)} MJ·mm·ha⁻¹·h⁻¹·ano⁻¹`, "", "Fatores adotados:", `- Referência de solo: ${soilReference.label}`, `- K: ${formatNumber(k, 3)}`, `- L: ${formatNumber(slopeLength, 1)} m`, `- S: ${formatNumber(slopePercent, 1)} %`, `- LS: ${formatNumber(result.topographicFactor, 3)}`, `- Referência de CP: ${cpReference.label}`, `- CP: ${formatNumber(cp, 3)}`, "", `Perda média anual estimada (PS): ${formatNumber(result.soilLoss, 2)} t/ha/ano`, `Classificação: ${result.classification ?? "não calculada"}`, ...complementaryAnalysis, "", "Referências: Tabela de referência EUPS; Wischmeier e Smith (1965), USDA Agriculture Handbook No. 282."].join("\n"); }
