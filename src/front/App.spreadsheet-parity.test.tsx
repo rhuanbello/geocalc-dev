@@ -464,6 +464,22 @@ describe("App spreadsheet parity", () => {
     expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).toBe("207");
   });
 
+  test("identifica precipitação mensal e totais anuais na tabela EUPS", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+
+    const precipitationHeader = screen.getByRole("columnheader", { name: "r (mm)" });
+    expect(precipitationHeader.className).toContain("eups-rainfall-precipitation-header");
+    fireEvent.focus(screen.getByText("r (mm)"));
+    await waitFor(() => {
+      expect(screen.getByRole("tooltip").textContent).toBe("r = precipitação média mensal em milímetros");
+    });
+    expect(screen.getByText("Totais anuais")).toBeTruthy();
+    expect(screen.getByText(/P anual \(mm\):/)).toBeTruthy();
+    expect(screen.getByText(/R anual:/)).toBeTruthy();
+  });
+
   test("seleciona uma estação INMET diretamente no mapa da EUPS", async () => {
     const user = userEvent.setup();
     render(<App />);

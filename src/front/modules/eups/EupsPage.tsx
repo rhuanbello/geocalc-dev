@@ -9,6 +9,7 @@ import { Formula } from "@/components/Formula";
 import { MapPicker, type MapPoint } from "@/components/MapPicker";
 import { StaticCombobox } from "@/components/StaticCombobox";
 import { exportEupsWorkbook } from "@/lib/eups-excel-export";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shadcn/components/ui/tooltip";
 import "katex/dist/katex.min.css";
 import { ArrowDown, ArrowUp, BookOpen, Calculator, CheckCircle2, Clipboard, Download, Droplets, Leaf, MapPin, Maximize2, Minus, Mountain, Ruler, Sprout, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -102,7 +103,7 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
   };
   const summary = buildSummary({ result, k, slopeLength, slopePercent, cp, soilReference, cpReference, fcps });
 
-  return <div className="app-layout">
+  return <TooltipProvider><div className="app-layout">
     <AppSidebar activeModule="eups" onModuleChange={onModuleChange} />
     <main className="app-shell">
       <ModuleHeader />
@@ -113,7 +114,7 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
         <Guidance title="O que informar">Informe a precipitação média de cada mês, em milímetros. Os 12 meses formam a precipitação anual P; o GeoCalc calcula I30 para cada mês e soma os resultados no fator R.<Formula latex="I30 = 67{,}355 \times \left(\frac{r^2}{P}\right)^{0{,}85} \qquad R = \sum I30" /></Guidance>
         <RainfallStationImport latitudeText={rainfallLatitudeText} longitudeText={rainfallLongitudeText} coordinatesAreValid={rainfallCoordinatesAreValid} point={rainfallPoint} station={selectedRainfallStation} distanceKm={rainfallStationMatch?.distanceKm ?? null} hasManualAdjustments={rainfallHasManualAdjustments} onLatitudeChange={setRainfallLatitudeText} onLongitudeChange={setRainfallLongitudeText} onPointChange={updateRainfallPoint} onStationSelect={selectRainfallStation} onMapExpand={() => setIsRainfallMapExpanded(true)} />
         <Legend />
-        <div className="table-wrap eups-rainfall-table-wrap"><table className="eups-rainfall-table"><thead><tr><th>Mês</th><th className="input-column">r (mm)</th><th className="output-column">I30</th></tr></thead><tbody>{EUPS_MONTHS.map((month, index) => <tr key={month}><td>{month}</td><td className="input-cell"><input inputMode="decimal" aria-label={`Precipitação de ${month}`} value={rainfallTexts[index] ?? ""} onChange={(event) => updateRainfallText(index, event.target.value)} /></td><td className="output-cell">{formatNumber(result.rows[index]?.erosivityIndex, 2)}</td></tr>)}</tbody><tfoot><tr><td>Precipitação anual / R</td><td>{formatNumber(result.precipitationTotal, 1)}</td><td>{formatNumber(result.rainfallErosivity, 2)}</td></tr></tfoot></table></div>
+        <div className="table-wrap eups-rainfall-table-wrap"><table className="eups-rainfall-table"><thead><tr><th>Mês</th><th className="input-column eups-rainfall-precipitation-header"><Tooltip><TooltipTrigger asChild><span className="table-header-tooltip-trigger" tabIndex={0}>r (mm)</span></TooltipTrigger><TooltipContent>r = precipitação média mensal em milímetros</TooltipContent></Tooltip></th><th className="output-column">I30</th></tr></thead><tbody>{EUPS_MONTHS.map((month, index) => <tr key={month}><td>{month}</td><td className="input-cell"><input inputMode="decimal" aria-label={`Precipitação de ${month}`} value={rainfallTexts[index] ?? ""} onChange={(event) => updateRainfallText(index, event.target.value)} /></td><td className="output-cell">{formatNumber(result.rows[index]?.erosivityIndex, 2)}</td></tr>)}</tbody><tfoot><tr><td>Totais anuais</td><td>P anual (mm): {formatNumber(result.precipitationTotal, 1)}</td><td>R anual: {formatNumber(result.rainfallErosivity, 2)}</td></tr></tfoot></table></div>
       </section>
 
       <RainfallMapDialog isOpen={isRainfallMapExpanded} point={rainfallPoint} station={selectedRainfallStation} distanceKm={rainfallStationMatch?.distanceKm ?? null} onClose={() => setIsRainfallMapExpanded(false)} onPointChange={updateRainfallPoint} onStationSelect={selectRainfallStation} />
@@ -150,7 +151,7 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
       <ReferencePanel />
       {notice ? <div className="eups-notice" role="status">{notice}<button type="button" onClick={() => setNotice(null)} aria-label="Fechar aviso">×</button></div> : null}
     </main>
-  </div>;
+  </div></TooltipProvider>;
 }
 
 function ModuleHeader() { return <header className="module-header eups-header" id="perda-de-solo"><div className="module-header-institution"><img src={`${import.meta.env.BASE_URL ?? "/"}brand/logo-geoquimica-colorido.png`} alt="PPG Geoquímica UFF" /><span>Programa de Pós-Graduação em Geociências</span></div><div className="module-header-content"><span className="module-kicker">GeoCalc · módulo de cálculo</span><h1>Perda de Solo <span>(EUPS)</span></h1><p>Estimativa didática da perda média anual de solo por erosão laminar.</p></div><div className="module-header-index" aria-label="Módulo 02, EUPS"><span>Módulo</span><strong>02</strong><small>EUPS</small></div></header>; }
