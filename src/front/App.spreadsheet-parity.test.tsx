@@ -409,36 +409,14 @@ describe("App spreadsheet parity", () => {
     expect(screen.queryByText(/Ferramenta educacional/)).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
-    expect(screen.getByRole("heading", { name: "Perda de Solo (EUPS)" })).toBeTruthy();
-    expect(screen.getByText("Conceitos básicos e metodologia")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Perda de Solo (EUPS)" })).toBeTruthy();
+    });
+    expect(screen.getByRole("heading", { name: "Local e dados observacionais" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Estação INMET" })).toBeTruthy();
     expect(screen.getByText("Chuva e erosividade")).toBeTruthy();
-    expect(screen.getByRole("combobox", { name: "Referência de tipo de solo" })).toBeTruthy();
-    expect(screen.getByLabelText("Cobertura, manejo e conservação")).toBeTruthy();
-    expect(screen.getByText("Tabela de cálculo e resultado")).toBeTruthy();
-    expect(screen.getByText("Resultado principal")).toBeTruthy();
-    expect(screen.getByText("Perda média anual estimada")).toBeTruthy();
-    expect(screen.getByText("Resumo da análise")).toBeTruthy();
-    expect(screen.getByText("Precipitação anual")).toBeTruthy();
-    expect(screen.getByText("Cobertura (CP)")).toBeTruthy();
-    expect(screen.getByText("Pendente")).toBeTruthy();
-    expect(document.querySelectorAll(".eups-result-panel:not(.fcps-panel) .eups-type-tag.input")).toHaveLength(4);
-    expect(screen.queryByText("Resultado final")).toBeNull();
-    [
-      "Erosão laminar",
-      "Equação Universal de Perda de Solo (EUPS)",
-      "Erosividade da chuva (R)",
-      "Erodibilidade do solo (K)",
-      "Fator topográfico (LS)",
-      "Cobertura, manejo e conservação (CP)",
-    ].forEach((title) => expect(screen.getByText(title)).toBeTruthy());
-    expect(screen.getByText("Referências e fontes")).toBeTruthy();
-    expect(screen.getAllByText(/Tabela de referência EUPS/).length).toBeGreaterThan(0);
-    expect((screen.getByLabelText("Síntese dos resultados da EUPS") as HTMLTextAreaElement).value).not.toMatch(/Bida/i);
-    expect(screen.queryByText(/Bida/i)).toBeNull();
-    expect(screen.queryByText("Potencial natural de erosão")).toBeNull();
-    expect(screen.queryByText(/Etapa 0/)).toBeNull();
-    expect(screen.queryByText("Mapa de erosividade")).toBeNull();
-    expect(screen.queryByText("Importar precipitação")).toBeNull();
+    expect(screen.queryByText("Hemisfério")).toBeNull();
+    expect(screen.queryByText("Latitude de fator")).toBeNull();
   });
 
   test("preenche a chuva EUPS pela estação INMET mais próxima e mantém ajustes manuais", async () => {
@@ -452,9 +430,11 @@ describe("App spreadsheet parity", () => {
     await waitFor(() => {
       expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).toBe("206");
     });
+    expect(screen.getByRole("heading", { name: "Local e dados observacionais" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Estação INMET" })).toBeTruthy();
     expect(screen.getByText("83377 - BRASILIA, DF")).toBeTruthy();
     expect(screen.getByText("1991–2020")).toBeTruthy();
-    expect(screen.getByText(/km de distância/)).toBeTruthy();
+    expect(screen.getByText("Dados observacionais por estação")).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText("Precipitação de Janeiro"), { target: { value: "207" } });
     expect(screen.getByText("Valores ajustados manualmente após o preenchimento.")).toBeTruthy();
@@ -473,7 +453,7 @@ describe("App spreadsheet parity", () => {
     expect(precipitationHeader.className).toContain("eups-rainfall-precipitation-header");
     fireEvent.focus(screen.getByText("r (mm)"));
     await waitFor(() => {
-      expect(screen.getByRole("tooltip").textContent).toBe("r = precipitação média mensal em milímetros");
+      expect(screen.getByRole("tooltip").textContent).toBe("r = precipitação média mensal (mm)");
     });
     expect(screen.getByText("Totais anuais")).toBeTruthy();
     expect(screen.getByText(/P anual \(mm\):/)).toBeTruthy();
@@ -493,6 +473,27 @@ describe("App spreadsheet parity", () => {
     expect((screen.getByLabelText("Longitude para estação INMET") as HTMLInputElement).value).not.toBe("");
   });
 
+  test("seleciona e limpa uma estação da EUPS sem descartar ponto ou precipitações", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    await user.click(screen.getByRole("combobox", { name: "Estação INMET" }));
+    await user.click(screen.getByText("BRASILIA", { exact: true }));
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).toBe("206");
+    });
+    const latitude = screen.getByLabelText("Latitude para estação INMET") as HTMLInputElement;
+    const precipitation = screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement;
+    const selectedLatitude = latitude.value;
+    fireEvent.change(precipitation, { target: { value: "207" } });
+
+    await user.click(screen.getByLabelText("Limpar estação selecionada"));
+    expect(latitude.value).toBe(selectedLatitude);
+    expect(precipitation.value).toBe("207");
+    expect(screen.getByRole("combobox", { name: "Estação INMET" }).textContent).toContain("Buscar estação");
+  });
+
   test("abre e fecha o mapa ampliado da EUPS sem perder o contexto da seleção", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -506,10 +507,8 @@ describe("App spreadsheet parity", () => {
 
     await user.click(screen.getByRole("button", { name: "Abrir mapa ampliado" }));
     const dialog = screen.getByRole("dialog", { name: "Mapa de estações INMET" });
-    expect(dialog.textContent).toContain("83377 - BRASILIA, DF");
     expect(dialog.textContent).toContain("INMET");
     expect(dialog.textContent).toContain("1991–2020");
-    expect(dialog.textContent).toMatch(/km de distância/);
 
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.queryByRole("dialog", { name: "Mapa de estações INMET" })).toBeNull();

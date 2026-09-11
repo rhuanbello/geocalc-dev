@@ -381,6 +381,46 @@ button:disabled {
     height: 100%;
 }
 
+.eups-location-coordinate-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.eups-location-coordinate-grid .eups-number-field > span {
+    color: var(--muted);
+}
+
+.eups-location-coordinate-message {
+    margin: -4px 0 0;
+    color: var(--muted);
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.eups-location-coordinate-message.is-error {
+    color: var(--warning);
+}
+
+.eups-location-manual-adjustments {
+    margin: 0;
+    color: var(--brand-dark);
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.eups-location-map {
+    position: relative;
+    min-height: 607px;
+}
+
+.eups-location-map .map-frame {
+    min-height: 607px;
+    height: 100%;
+}
+
 .eups-map-expand-button {
     position: absolute;
     top: 10px;
@@ -435,7 +475,7 @@ button:disabled {
 
 .eups-map-modal-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.76fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 16px;
     padding: 15px 17px 14px;
@@ -470,7 +510,7 @@ button:disabled {
 
 .eups-map-modal-close {
     display: grid;
-    grid-column: 3;
+    grid-column: 2;
     flex: 0 0 auto;
     place-items: center;
     width: 34px;
@@ -1139,6 +1179,11 @@ button:disabled {
         min-height: 330px;
     }
 
+    .eups-location-map,
+    .eups-location-map .map-frame {
+        min-height: 330px;
+    }
+
     .eups-result-spotlight {
         grid-template-columns: minmax(280px, 0.86fr) minmax(0, 1.14fr);
         gap: 12px;
@@ -1165,6 +1210,10 @@ button:disabled {
     }
 
     .eups-rainfall-coordinate-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .eups-location-coordinate-grid {
         grid-template-columns: 1fr;
     }
 
