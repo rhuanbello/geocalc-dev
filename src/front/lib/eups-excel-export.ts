@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import type { EupsResult } from "$/eups";
+import { EUPS_K_COMPONENT_WEIGHTS, type GuidedKResult } from "$/eups-erodibility";
 import type { FcpsResult } from "$/fcps";
 import { formatIsoDatePtBr } from "$/date-format";
 
@@ -15,6 +16,7 @@ type EupsWorkbookParams = {
   cp: number | null;
   soilReferenceLabel: string;
   cpReferenceLabel: string;
+  kComposition: GuidedKResult | null;
   fcps: FcpsResult;
 };
 
@@ -37,7 +39,7 @@ export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook
   sheet.getCell("A2").alignment = { horizontal: "center" };
 
   sheet.getCell("A4").value = "Método";
-  sheet.getCell("B4").value = "Cálculo manual com 12 precipitações mensais";
+  sheet.getCell("B4").value = "Cálculo com 12 precipitações mensais e fatores EUPS";
   sheet.mergeCells("B4:E4");
   sheet.getCell("A5").value = "Data de geração";
   sheet.getCell("B5").value = formatIsoDatePtBr(new Date().toISOString().slice(0, 10));
@@ -103,9 +105,36 @@ export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook
     sheet.mergeCells(`A${row}:E${row}`);
   });
 
+  const compositionRows: number[] = [];
+  let complementaryStart = notesStart + 7;
+  if (params.kComposition?.state === "complete") {
+    sheet.mergeCells(`A${complementaryStart}:E${complementaryStart}`);
+    sheet.getCell(`A${complementaryStart}`).value = "Composição do fator K";
+    styleSection(sheet.getRow(complementaryStart));
+    sheet.getRow(complementaryStart + 1).values = ["Componente", "Participação", "Classe", "Índice", ""];
+    styleHeader(sheet.getRow(complementaryStart + 1));
+    params.kComposition.components.forEach((component, index) => {
+      const row = complementaryStart + index + 2;
+      compositionRows.push(row);
+      sheet.getCell(`A${row}`).value = `Componente ${component.component}`;
+      sheet.getCell(`B${row}`).value = EUPS_K_COMPONENT_WEIGHTS[params.kComposition!.components.length as 1 | 2 | 3 | 4][index]!;
+      sheet.getCell(`B${row}`).numFmt = "0%";
+      sheet.getCell(`C${row}`).value = component.erosionClass;
+      sheet.getCell(`D${row}`).value = component.index;
+    });
+    const resultRow = complementaryStart + params.kComposition.components.length + 2;
+    compositionRows.push(resultRow);
+    sheet.getCell(`A${resultRow}`).value = "Índice ponderado / K";
+    sheet.getCell(`B${resultRow}`).value = params.kComposition.weightedIndex;
+    sheet.getCell(`C${resultRow}`).value = params.kComposition.k;
+    sheet.getCell(`D${resultRow}`).value = "Tabela de conversão de referência";
+    sheet.mergeCells(`D${resultRow}:E${resultRow}`);
+    complementaryStart = resultRow + 2;
+  }
+
   const fcpsRows: number[] = [];
   if (params.fcps.status === "complete") {
-    const fcpsStart = notesStart + 7;
+    const fcpsStart = complementaryStart;
     sheet.mergeCells(`A${fcpsStart}:E${fcpsStart}`);
     sheet.getCell(`A${fcpsStart}`).value = "Análise complementar — FCPS";
     styleSection(sheet.getRow(fcpsStart));
@@ -130,7 +159,7 @@ export function createEupsWorkbook(params: EupsWorkbookParams): ExcelJS.Workbook
     sheet.mergeCells(`B${formulaRow}:E${formulaRow}`);
   }
 
-  [4, 5, ...Array.from({ length: 10 }, (_, index) => 8 + index), ...Array.from({ length: 12 }, (_, index) => 20 + index), 32, 33, ...Array.from({ length: 5 }, (_, index) => notesStart + 1 + index), ...fcpsRows].forEach((row) => {
+  [4, 5, ...Array.from({ length: 10 }, (_, index) => 8 + index), ...Array.from({ length: 12 }, (_, index) => 20 + index), 32, 33, ...Array.from({ length: 5 }, (_, index) => notesStart + 1 + index), ...compositionRows, ...fcpsRows].forEach((row) => {
     sheet.getRow(row).eachCell((cell) => {
       cell.border = { bottom: { style: "thin", color: { argb: "FFCFDDD5" } } };
       cell.alignment = { vertical: "top", wrapText: true };

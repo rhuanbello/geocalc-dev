@@ -412,7 +412,8 @@ describe("App spreadsheet parity", () => {
     expect(screen.getByRole("heading", { name: "Perda de Solo (EUPS)" })).toBeTruthy();
     expect(screen.getByText("Conceitos básicos e metodologia")).toBeTruthy();
     expect(screen.getByText("Chuva e erosividade")).toBeTruthy();
-    expect(screen.getByRole("combobox", { name: "Referência de tipo de solo" })).toBeTruthy();
+    expect(screen.getByText("Quantos componentes formam a unidade de solo?")).toBeTruthy();
+    expect(screen.getByText("Classificação guiada")).toBeTruthy();
     expect(screen.getByLabelText("Cobertura, manejo e conservação")).toBeTruthy();
     expect(screen.getByText("Tabela de cálculo e resultado")).toBeTruthy();
     expect(screen.getByText("Resultado principal")).toBeTruthy();
@@ -421,7 +422,7 @@ describe("App spreadsheet parity", () => {
     expect(screen.getByText("Precipitação anual")).toBeTruthy();
     expect(screen.getByText("Cobertura (CP)")).toBeTruthy();
     expect(screen.getByText("Pendente")).toBeTruthy();
-    expect(document.querySelectorAll(".eups-result-panel:not(.fcps-panel) .eups-type-tag.input")).toHaveLength(4);
+    expect(document.querySelectorAll(".eups-result-panel:not(.fcps-panel) .eups-type-tag.input")).toHaveLength(3);
     expect(screen.queryByText("Resultado final")).toBeNull();
     [
       "Erosão laminar",
@@ -441,23 +442,26 @@ describe("App spreadsheet parity", () => {
     expect(screen.queryByText("Importar precipitação")).toBeNull();
   });
 
-  test("aplica referências didáticas de K e CP sem preencher fatores espaciais", async () => {
+  test("classifica K por filtros progressivos e preserva a alternativa manual", async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
 
-    await user.click(screen.getByRole("combobox", { name: "Referência de tipo de solo" }));
-    await user.click(screen.getByText("Areia quartzosa"));
+    await user.click(screen.getByRole("button", { name: /1 componente/ }));
+    expect(screen.getByRole("combobox", { name: "Ramo principal" })).toBeTruthy();
+    await user.click(screen.getByRole("combobox", { name: "Ramo principal" }));
+    await user.click(screen.getByText("SOLOS"));
+    expect(screen.getByRole("combobox", { name: "Ordem" })).toBeTruthy();
+    expect(screen.queryByText("Unidade de mapeamento")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Informar K manualmente" }));
+    await user.type(screen.getByLabelText("Fator K"), "0,027");
     expect((screen.getByLabelText("Fator K") as HTMLInputElement).value).toBe("0,027");
+    expect(screen.getAllByText("Valor de K informado manualmente").length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole("combobox", { name: "Referência de cobertura e manejo" }));
     await user.click(screen.getByText("Floresta nativa"));
     expect((screen.getByLabelText("Cobertura, manejo e conservação") as HTMLInputElement).value).toBe("0,01");
-
-    await user.click(screen.getByRole("combobox", { name: "Referência de tipo de solo" }));
-    await user.click(screen.getByText("Latossolo V-A"));
-    expect((screen.getByLabelText("Fator K") as HTMLInputElement).value).toBe("");
-    expect(screen.getByText(/Faixa de referência: 0,013 a 0,020/)).toBeTruthy();
   });
 
   test("mantém FCPS opcional, posterior à EUPS e restrita à sua própria validação", async () => {
@@ -477,6 +481,7 @@ describe("App spreadsheet parity", () => {
     ["208", "168", "260", "225", "208", "272", "45", "26", "42", "36", "42", "26"].forEach((value, index) => {
       fireEvent.change(screen.getByLabelText(`Precipitação de ${["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"][index]}`), { target: { value } });
     });
+    await user.click(screen.getByRole("button", { name: "Informar K manualmente" }));
     fireEvent.change(screen.getByLabelText("Fator K"), { target: { value: "0,027" } });
     fireEvent.change(screen.getByLabelText("Comprimento da vertente L"), { target: { value: "120" } });
     fireEvent.change(screen.getByLabelText("Declividade S"), { target: { value: "20" } });
