@@ -31,6 +31,7 @@ export function StaticCombobox<TValue extends string | number>({
   onChange,
   placeholder = "Selecionar",
   className,
+  popoverClassName,
 }: {
   id: string;
   label: string;
@@ -39,6 +40,7 @@ export function StaticCombobox<TValue extends string | number>({
   onChange: (value: TValue) => void;
   placeholder?: string;
   className?: string;
+  popoverClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const selectedOption = useMemo(
@@ -65,7 +67,7 @@ export function StaticCombobox<TValue extends string | number>({
             <ChevronsUpDown />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="static-combobox-popover">
+        <PopoverContent className={cn("static-combobox-popover", popoverClassName)}>
           <Command>
             <CommandInput placeholder="Filtrar opções" />
             <CommandList>

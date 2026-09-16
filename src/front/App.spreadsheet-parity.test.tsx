@@ -409,55 +409,220 @@ describe("App spreadsheet parity", () => {
     expect(screen.queryByText(/Ferramenta educacional/)).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
-    expect(screen.getByRole("heading", { name: "Perda de Solo (EUPS)" })).toBeTruthy();
-    expect(screen.getByText("Conceitos básicos e metodologia")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Perda de Solo (EUPS)" })).toBeTruthy();
+    });
+    expect(screen.getByRole("heading", { name: "Local e dados observacionais" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Estação INMET" })).toBeTruthy();
     expect(screen.getByText("Chuva e erosividade")).toBeTruthy();
-    expect(screen.getByRole("combobox", { name: "Referência de tipo de solo" })).toBeTruthy();
-    expect(screen.getByLabelText("Cobertura, manejo e conservação")).toBeTruthy();
-    expect(screen.getByText("Tabela de cálculo e resultado")).toBeTruthy();
-    expect(screen.getByText("Resultado principal")).toBeTruthy();
-    expect(screen.getByText("Perda média anual estimada")).toBeTruthy();
-    expect(screen.getByText("Resumo da análise")).toBeTruthy();
-    expect(screen.getByText("Precipitação anual")).toBeTruthy();
-    expect(screen.getByText("Cobertura (CP)")).toBeTruthy();
-    expect(screen.getByText("Pendente")).toBeTruthy();
-    expect(document.querySelectorAll(".eups-result-panel:not(.fcps-panel) .eups-type-tag.input")).toHaveLength(4);
-    expect(screen.queryByText("Resultado final")).toBeNull();
-    [
-      "Erosão laminar",
-      "Equação Universal de Perda de Solo (EUPS)",
-      "Erosividade da chuva (R)",
-      "Erodibilidade do solo (K)",
-      "Fator topográfico (LS)",
-      "Cobertura, manejo e conservação (CP)",
-    ].forEach((title) => expect(screen.getByText(title)).toBeTruthy());
-    expect(screen.getByText("Referências e fontes")).toBeTruthy();
-    expect(screen.getAllByText(/Tabela de referência EUPS/).length).toBeGreaterThan(0);
-    expect((screen.getByLabelText("Síntese dos resultados da EUPS") as HTMLTextAreaElement).value).not.toMatch(/Bida/i);
-    expect(screen.queryByText(/Bida/i)).toBeNull();
-    expect(screen.queryByText("Potencial natural de erosão")).toBeNull();
-    expect(screen.queryByText(/Etapa 0/)).toBeNull();
-    expect(screen.queryByText("Mapa de erosividade")).toBeNull();
-    expect(screen.queryByText("Importar precipitação")).toBeNull();
+    expect(screen.queryByText("Hemisfério")).toBeNull();
+    expect(screen.queryByText("Latitude de fator")).toBeNull();
   });
 
-  test("aplica referências didáticas de K e CP sem preencher fatores espaciais", async () => {
+  test("preenche a chuva EUPS pela estação INMET mais próxima e mantém ajustes manuais", async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
 
-    await user.click(screen.getByRole("combobox", { name: "Referência de tipo de solo" }));
-    await user.click(screen.getByText("Areia quartzosa"));
+    fireEvent.change(screen.getByLabelText("Latitude para estação INMET"), { target: { value: "-15,7801" } });
+    fireEvent.change(screen.getByLabelText("Longitude para estação INMET"), { target: { value: "-47,9292" } });
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).toBe("206");
+    });
+    expect(screen.getByRole("heading", { name: "Local e dados observacionais" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Estação INMET" })).toBeTruthy();
+    expect(screen.getByText("83377 - BRASILIA, DF")).toBeTruthy();
+    expect(screen.getByText("1991–2020")).toBeTruthy();
+    expect(screen.getByText("Dados observacionais por estação")).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Precipitação de Janeiro"), { target: { value: "207" } });
+    expect(screen.getByText("Valores ajustados manualmente após o preenchimento.")).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Latitude para estação INMET"), { target: { value: "100" } });
+    expect(screen.getByText(/Use latitude entre/)).toBeTruthy();
+    expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).toBe("207");
+  });
+
+  test("identifica precipitação mensal e totais anuais na tabela EUPS", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+
+    const precipitationHeader = screen.getByRole("columnheader", { name: "r (mm)" });
+    expect(precipitationHeader.className).toContain("eups-rainfall-precipitation-header");
+    fireEvent.focus(screen.getByText("r (mm)"));
+    await waitFor(() => {
+      expect(screen.getByRole("tooltip").textContent).toBe("r = precipitação média mensal (mm)");
+    });
+    expect(screen.getByText("Totais anuais")).toBeTruthy();
+    expect(screen.getByText(/P anual \(mm\):/)).toBeTruthy();
+    expect(screen.getByText(/R anual:/)).toBeTruthy();
+  });
+
+  test("seleciona uma estação INMET diretamente no mapa da EUPS", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    await user.click(screen.getByText("Selecionar estação INMET no mapa"));
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).not.toBe("");
+    });
+    expect((screen.getByLabelText("Latitude para estação INMET") as HTMLInputElement).value).not.toBe("");
+    expect((screen.getByLabelText("Longitude para estação INMET") as HTMLInputElement).value).not.toBe("");
+  });
+
+  test("seleciona e limpa uma estação da EUPS sem descartar ponto ou precipitações", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    await user.click(screen.getByRole("combobox", { name: "Estação INMET" }));
+    await user.click(screen.getByText("BRASILIA", { exact: true }));
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).toBe("206");
+    });
+    const latitude = screen.getByLabelText("Latitude para estação INMET") as HTMLInputElement;
+    const precipitation = screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement;
+    const selectedLatitude = latitude.value;
+    fireEvent.change(precipitation, { target: { value: "207" } });
+
+    await user.click(screen.getByLabelText("Limpar estação selecionada"));
+    expect(latitude.value).toBe(selectedLatitude);
+    expect(precipitation.value).toBe("207");
+    expect(screen.getByRole("combobox", { name: "Estação INMET" }).textContent).toContain("Buscar estação");
+  });
+
+  test("abre e fecha o mapa ampliado da EUPS sem perder o contexto da seleção", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    fireEvent.change(screen.getByLabelText("Latitude para estação INMET"), { target: { value: "-15,7801" } });
+    fireEvent.change(screen.getByLabelText("Longitude para estação INMET"), { target: { value: "-47,9292" } });
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Precipitação de Janeiro") as HTMLInputElement).value).toBe("206");
+    });
+
+    await user.click(screen.getByRole("button", { name: "Abrir mapa ampliado" }));
+    const dialog = screen.getByRole("dialog", { name: "Mapa de estações INMET" });
+    expect(dialog.textContent).toContain("INMET");
+    expect(dialog.textContent).toContain("1991–2020");
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Mapa de estações INMET" })).toBeNull();
+  });
+
+  test("permite fechar o mapa ampliado da EUPS antes de selecionar uma estação", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    await user.click(screen.getByRole("button", { name: "Abrir mapa ampliado" }));
+
+    expect(screen.getByRole("button", { name: "Fechar mapa ampliado" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Fechar mapa ampliado" }));
+    expect(screen.queryByRole("dialog", { name: "Mapa de estações INMET" })).toBeNull();
+  });
+
+  test("permite informar K manualmente ou iniciar a consulta SiBCS", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+
+    fireEvent.change(screen.getByLabelText("Fator K"), { target: { value: "0,027" } });
     expect((screen.getByLabelText("Fator K") as HTMLInputElement).value).toBe("0,027");
+    expect(screen.getByText("0,0270")).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Informações sobre o cálculo de K" }));
+    const kInformation = await screen.findByRole("dialog", { name: "Tabela de conversão do fator K" });
+    expect(kInformation.textContent).toContain("4,8");
+    expect(kInformation.textContent).toContain("0,0495");
+    expect(kInformation.textContent).toContain("50%");
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Tabela de conversão do fator K" })).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Consulta SiBCS" }));
+    const componentCount = await screen.findByRole("combobox", { name: "Número de componentes da unidade" });
+    expect(screen.queryByRole("combobox", { name: "Ordem" })).toBeNull();
+    await user.click(componentCount);
+    await user.click(screen.getByText("1 componente"));
+    const order = await screen.findByRole("combobox", { name: "Ordem" });
+    await user.click(order);
+    await user.click(screen.getByText("ARGISSOLO"));
+    expect(screen.getByRole("combobox", { name: "Subordem" })).toBeTruthy();
+
+    await user.click(screen.getByRole("combobox", { name: "Subordem" }));
+    await user.click(screen.getByText("AMARELO"));
+    await user.click(screen.getByRole("combobox", { name: "Grande grupo" }));
+    await user.click(screen.getByText("DISTRÓFICO"));
+    await user.click(screen.getByRole("combobox", { name: "Subgrupo" }));
+    await user.click(screen.getByText("PLINTOSSÓLICO"));
+    await user.click(screen.getByRole("combobox", { name: "Atividade + textura principal" }));
+    await user.click(screen.getByText("ARGILOSA"));
+    expect(screen.getByText("Componente resolvido")).toBeTruthy();
+    expect(screen.getAllByText("0,0225").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Adicionar C2" })).toBeNull();
+    await user.click(screen.getByRole("combobox", { name: "Número de componentes da unidade" }));
+    await user.click(screen.getByText("2 componentes"));
+    expect(screen.getByRole("tab", { name: /C2 Pendente/ })).toBeTruthy();
 
     await user.click(screen.getByRole("combobox", { name: "Referência de cobertura e manejo" }));
     await user.click(screen.getByText("Floresta nativa"));
     expect((screen.getByLabelText("Cobertura, manejo e conservação") as HTMLInputElement).value).toBe("0,01");
+  });
 
-    await user.click(screen.getByRole("combobox", { name: "Referência de tipo de solo" }));
-    await user.click(screen.getByText("Latossolo V-A"));
-    expect((screen.getByLabelText("Fator K") as HTMLInputElement).value).toBe("");
-    expect(screen.getByText(/Faixa de referência: 0,013 a 0,020/)).toBeTruthy();
+  test("identifica unidade não taxonômica sem apresentar K como indisponível", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    await user.click(screen.getByRole("button", { name: "Consulta SiBCS" }));
+    await user.click(screen.getByRole("button", { name: "Unidade não taxonômica" }));
+
+    const order = await screen.findByRole("combobox", { name: "Ordem" });
+    await user.click(order);
+    await user.click(screen.getByText("OUTROS"));
+    await user.click(screen.getByRole("combobox", { name: "Atividade + textura principal" }));
+    await user.click(screen.getByText("AFLORAMENTO DE ROCHA"));
+
+    expect(screen.getByText("K não aplicável")).toBeTruthy();
+    expect(screen.getByText(/não possui índice de erodibilidade/i)).toBeTruthy();
+    expect(screen.queryByText("Resultado indisponível")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Refinar descrição do componente" })).toBeNull();
+  });
+
+  test("permite refinar a descrição sem alterar o resultado já conhecido", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    await user.click(screen.getByRole("button", { name: "Consulta SiBCS" }));
+    await user.click(screen.getByRole("combobox", { name: "Número de componentes da unidade" }));
+    await user.click(screen.getByText("2 componentes"));
+    await user.click(screen.getByRole("tab", { name: /C2 Pendente/ }));
+    await user.click(screen.getByRole("combobox", { name: "Ordem" }));
+    await user.click(screen.getByText("GLEISSOLO"));
+    await user.click(screen.getByRole("combobox", { name: "Subordem" }));
+    await user.click(screen.getByText("SÁLICO"));
+
+    expect(screen.queryByRole("combobox", { name: "Grande grupo" })).toBeNull();
+    expect(screen.getByText(/Muito alta/i)).toBeTruthy();
+    const refinementButton = screen.getByRole("button", { name: "Refinar descrição do componente" });
+    const confirmationStatus = screen.getByText("Confirmação necessária");
+    expect(refinementButton.compareDocumentPosition(confirmationStatus) & 4).toBe(4);
+    await user.click(refinementButton);
+    expect(screen.getByText(/não alteram a classe de erodibilidade, o índice nem o K final/i)).toBeTruthy();
+    await user.click(screen.getByRole("combobox", { name: "Grande grupo" }));
+    await user.click(screen.getByText("SÓDICO"));
+    await user.click(screen.getByRole("combobox", { name: "Subgrupo" }));
+    await user.click(screen.getByText("TÍPICO"));
+    await user.click(screen.getByRole("combobox", { name: "Atividade + textura principal" }));
+    await user.click(screen.getByText("INDISCRIMINADA"));
+
+    expect(screen.getByText("Confirmação necessária")).toBeTruthy();
+    expect(screen.getAllByText(/Muito alta/i).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: "Ocultar detalhamento opcional" }));
+    expect(screen.queryByRole("combobox", { name: "Grande grupo" })).toBeNull();
+    expect(screen.getByText(/Detalhamento: Grande grupo: Sódico/i)).toBeTruthy();
   });
 
   test("mantém FCPS opcional, posterior à EUPS e restrita à sua própria validação", async () => {

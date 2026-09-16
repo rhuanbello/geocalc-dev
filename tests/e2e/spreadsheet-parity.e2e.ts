@@ -27,6 +27,10 @@ test("percorre a EUPS-base manual sem fontes espaciais", async ({ page }) => {
   await page.getByRole("button", { name: "Perda de Solos (EUPS)" }).click();
 
   await expect(page.getByRole("heading", { name: "Perda de Solo (EUPS)", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Local e dados observacionais" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Estação INMET" })).toBeVisible();
+  await expect(page.getByText("Período de referência")).toBeVisible();
+  await expect(page.getByText("Dados observacionais por estação")).toBeVisible();
   await expect(page.getByText("Conceitos básicos e metodologia")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Chuva e erosividade" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Erosão laminar", exact: true })).toBeVisible();

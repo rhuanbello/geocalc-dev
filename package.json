@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "build:prod": "VITE_BASE_PATH=/geocalc/ bun run build",
     "build:dev-pages": "VITE_BASE_PATH=/geocalc-dev/ bun run build",
+    "generate:eups-soil-data": "bun run scripts/generate-eups-soil-data.ts",
     "generate:inmet-data": "bun run scripts/generate-inmet-normals-data.ts",
     "audit:inmet": "bun run scripts/generate-inmet-audit.ts",
     "validate:inmet": "bun run scripts/generate-inmet-validation.ts",
