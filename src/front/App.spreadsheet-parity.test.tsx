@@ -543,26 +543,86 @@ describe("App spreadsheet parity", () => {
     expect(screen.queryByRole("dialog", { name: "Tabela de conversão do fator K" })).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Consulta SiBCS" }));
-    expect(screen.queryByRole("combobox", { name: "Número de componentes da unidade" })).toBeNull();
+    const componentCount = await screen.findByRole("combobox", { name: "Número de componentes da unidade" });
+    expect(screen.queryByRole("combobox", { name: "Ordem" })).toBeNull();
+    await user.click(componentCount);
+    await user.click(screen.getByText("1 componente"));
     const order = await screen.findByRole("combobox", { name: "Ordem" });
     await user.click(order);
-    await user.click(screen.getByText("ESPODOSSOLO"));
+    await user.click(screen.getByText("ARGISSOLO"));
     expect(screen.getByRole("combobox", { name: "Subordem" })).toBeTruthy();
 
-    expect((screen.getByRole("button", { name: "Adicionar C2" }) as HTMLButtonElement).disabled).toBe(true);
     await user.click(screen.getByRole("combobox", { name: "Subordem" }));
-    await user.click(screen.getByText("FERRI-HUMILÚVICO"));
+    await user.click(screen.getByText("AMARELO"));
     await user.click(screen.getByRole("combobox", { name: "Grande grupo" }));
-    await user.click(screen.getByText("HIDRO-HIPERESPESSO"));
+    await user.click(screen.getByText("DISTRÓFICO"));
+    await user.click(screen.getByRole("combobox", { name: "Subgrupo" }));
+    await user.click(screen.getByText("PLINTOSSÓLICO"));
+    await user.click(screen.getByRole("combobox", { name: "Atividade + textura principal" }));
+    await user.click(screen.getByText("ARGILOSA"));
     expect(screen.getByText("Componente resolvido")).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Adicionar C2" }));
+    expect(screen.getAllByText("0,0225").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Adicionar C2" })).toBeNull();
+    await user.click(screen.getByRole("combobox", { name: "Número de componentes da unidade" }));
+    await user.click(screen.getByText("2 componentes"));
     expect(screen.getByRole("tab", { name: /C2 Pendente/ })).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Remover C2" }));
-    expect(screen.queryByRole("tab", { name: /C2 Pendente/ })).toBeNull();
 
     await user.click(screen.getByRole("combobox", { name: "Referência de cobertura e manejo" }));
     await user.click(screen.getByText("Floresta nativa"));
     expect((screen.getByLabelText("Cobertura, manejo e conservação") as HTMLInputElement).value).toBe("0,01");
+  });
+
+  test("identifica unidade não taxonômica sem apresentar K como indisponível", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    await user.click(screen.getByRole("button", { name: "Consulta SiBCS" }));
+    await user.click(screen.getByRole("button", { name: "Unidade não taxonômica" }));
+
+    const order = await screen.findByRole("combobox", { name: "Ordem" });
+    await user.click(order);
+    await user.click(screen.getByText("OUTROS"));
+    await user.click(screen.getByRole("combobox", { name: "Atividade + textura principal" }));
+    await user.click(screen.getByText("AFLORAMENTO DE ROCHA"));
+
+    expect(screen.getByText("K não aplicável")).toBeTruthy();
+    expect(screen.getByText(/não possui índice de erodibilidade/i)).toBeTruthy();
+    expect(screen.queryByText("Resultado indisponível")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Refinar descrição do componente" })).toBeNull();
+  });
+
+  test("permite refinar a descrição sem alterar o resultado já conhecido", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
+    await user.click(screen.getByRole("button", { name: "Consulta SiBCS" }));
+    await user.click(screen.getByRole("combobox", { name: "Número de componentes da unidade" }));
+    await user.click(screen.getByText("2 componentes"));
+    await user.click(screen.getByRole("tab", { name: /C2 Pendente/ }));
+    await user.click(screen.getByRole("combobox", { name: "Ordem" }));
+    await user.click(screen.getByText("GLEISSOLO"));
+    await user.click(screen.getByRole("combobox", { name: "Subordem" }));
+    await user.click(screen.getByText("SÁLICO"));
+
+    expect(screen.queryByRole("combobox", { name: "Grande grupo" })).toBeNull();
+    expect(screen.getByText(/Muito alta/i)).toBeTruthy();
+    const refinementButton = screen.getByRole("button", { name: "Refinar descrição do componente" });
+    const confirmationStatus = screen.getByText("Confirmação necessária");
+    expect(refinementButton.compareDocumentPosition(confirmationStatus) & 4).toBe(4);
+    await user.click(refinementButton);
+    expect(screen.getByText(/não alteram a classe de erodibilidade, o índice nem o K final/i)).toBeTruthy();
+    await user.click(screen.getByRole("combobox", { name: "Grande grupo" }));
+    await user.click(screen.getByText("SÓDICO"));
+    await user.click(screen.getByRole("combobox", { name: "Subgrupo" }));
+    await user.click(screen.getByText("TÍPICO"));
+    await user.click(screen.getByRole("combobox", { name: "Atividade + textura principal" }));
+    await user.click(screen.getByText("INDISCRIMINADA"));
+
+    expect(screen.getByText("Confirmação necessária")).toBeTruthy();
+    expect(screen.getAllByText(/Muito alta/i).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: "Ocultar detalhamento opcional" }));
+    expect(screen.queryByRole("combobox", { name: "Grande grupo" })).toBeNull();
+    expect(screen.getByText(/Detalhamento: Grande grupo: Sódico/i)).toBeTruthy();
   });
 
   test("mantém FCPS opcional, posterior à EUPS e restrita à sua própria validação", async () => {

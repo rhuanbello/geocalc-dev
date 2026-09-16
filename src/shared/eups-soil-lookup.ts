@@ -1,10 +1,11 @@
 export type EupsSoilComponent = "C1" | "C2" | "C3" | "C4";
+export type EupsSoilPathComponent = EupsSoilComponent | "N/A — UM NÃO TAXONÔMICA";
 export type EupsSoilFilterId = "sibcs1" | "sibcs2" | "sibcs3" | "sibcs4" | "special1" | "special2" | "special3" | "special4";
 export type EupsSoilSelections = Partial<Record<EupsSoilFilterId, string>>;
 
 type RawPath = {
   id: string;
-  component: EupsSoilComponent | "N/A — UM NÃO TAXONÔMICA";
+  component: EupsSoilPathComponent;
   filters: Record<EupsSoilFilterId, string>;
   erosion: { className: string; index: number | null };
   operational: { state: string; returnMode: string; requiresConfirmation: boolean; action: string };
@@ -27,9 +28,10 @@ export type EupsSoilFilterStep = {
 };
 
 export type EupsSoilResolution = {
-  kind: "pending" | "automatic" | "confirmation" | "blocked" | "not-applicable" | "non-taxonomic";
+  kind: "pending" | "automatic" | "confirmation" | "blocked" | "not-applicable";
   path: RawPath | null;
   message: string;
+  preview?: { className: string; index: number };
 };
 
 export type EupsSoilKResult = {
@@ -43,8 +45,9 @@ const NOT_APPLICABLE = "(NÃO SE APLICA)";
 
 export function getProgressiveSoilFilterSteps(
   dataset: EupsSoilDataset,
-  component: EupsSoilComponent,
+  component: EupsSoilPathComponent,
   selections: EupsSoilSelections,
+  includeOptionalDetails = false,
 ): EupsSoilFilterStep[] {
   let candidates = getCandidates(dataset, component, {});
   const steps: EupsSoilFilterStep[] = [];
@@ -57,7 +60,7 @@ export function getProgressiveSoilFilterSteps(
     if (value) {
       steps.push({ id: field.id, label: field.label, options: visibleOptions, value });
       candidates = candidates.filter((path) => path.filters[field.id] === value);
-      if (hasUnambiguousOutcome(candidates)) return steps;
+      if (!includeOptionalDetails && hasUnambiguousOutcome(candidates)) return steps;
       continue;
     }
 
@@ -72,7 +75,7 @@ export function getProgressiveSoilFilterSteps(
 
 export function resolveSoilComponent(
   dataset: EupsSoilDataset,
-  component: EupsSoilComponent,
+  component: EupsSoilPathComponent,
   selections: EupsSoilSelections,
   confirmed: boolean,
 ): EupsSoilResolution {
@@ -88,19 +91,24 @@ export function resolveSoilComponent(
   }
 
   const path = [...candidates].sort((left, right) => pathPriority(right) - pathPriority(left) || left.id.localeCompare(right.id))[0]!;
-  if (path.operational.returnMode === "ENCERRAR SEM K") {
-    return { kind: "not-applicable", path, message: path.operational.action };
+  if (path.operational.returnMode === "ENCERRAR SEM K" || path.operational.returnMode === "RAMO NÃO TAXONÔMICO") {
+    return { kind: "not-applicable", path, message: `${path.erosion.className} não possui índice de erodibilidade para o cálculo de K.` };
   }
   if (path.operational.returnMode === "BLOQUEADO") {
-    return { kind: "blocked", path, message: path.operational.action };
-  }
-  if (path.operational.requiresConfirmation && !confirmed) {
-    return { kind: "confirmation", path, message: path.operational.action };
+    return { kind: "blocked", path, message: getReviewMessage(path) };
   }
   if (path.erosion.index === null) {
-    return { kind: "non-taxonomic", path, message: path.operational.action };
+    return { kind: "not-applicable", path, message: `${path.erosion.className} não possui índice de erodibilidade para o cálculo de K.` };
   }
-  return { kind: "automatic", path, message: path.operational.action };
+  if (path.operational.requiresConfirmation && !confirmed) {
+    return {
+      kind: "confirmation",
+      path,
+      message: "Confira a correspondência antes de usar este componente no cálculo de K.",
+      preview: { className: path.erosion.className, index: path.erosion.index },
+    };
+  }
+  return { kind: "automatic", path, message: "" };
 }
 
 export function calculateSoilK(
@@ -132,7 +140,7 @@ export function clearSelectionsAfter(fieldId: EupsSoilFilterId, selections: Eups
   return Object.fromEntries(dataset.filters.slice(0, fieldIndex + 1).flatMap((field) => selections[field.id] ? [[field.id, selections[field.id]]] : [])) as EupsSoilSelections;
 }
 
-function getCandidates(dataset: EupsSoilDataset, component: EupsSoilComponent, selections: EupsSoilSelections): RawPath[] {
+function getCandidates(dataset: EupsSoilDataset, component: EupsSoilPathComponent, selections: EupsSoilSelections): RawPath[] {
   return dataset.paths.filter((path) => path.component === component && Object.entries(selections).every(([field, value]) => path.filters[field as EupsSoilFilterId] === value));
 }
 
@@ -168,6 +176,12 @@ function pathPriority(path: RawPath): number {
   if (path.operational.returnMode === "BLOQUEADO") return 3;
   if (path.operational.requiresConfirmation) return 2;
   return 1;
+}
+
+function getReviewMessage(path: RawPath): string {
+  return path.operational.state.includes("EROD AMBÍGUA")
+    ? "Há mais de uma classe de erodibilidade possível para esta correspondência."
+    : "A correspondência taxonômica exige revisão especializada antes do cálculo de K.";
 }
 
 function roundToTenth(value: number): number {
