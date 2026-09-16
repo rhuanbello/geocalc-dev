@@ -1,7 +1,7 @@
 import type { ReferenceSource } from "$/academic";
 import { EMPTY_EUPS_RAINFALL, EUPS_MONTHS, calculateEups, type EupsRainfallInput } from "$/eups";
 import { EUPS_METHODOLOGY, EUPS_REFERENCE_SOURCES } from "$/eups-academic";
-import { EUPS_CP_REFERENCES, EUPS_SOIL_REFERENCES, type EupsCpReference, type EupsSoilReference } from "$/eups-references";
+import { EUPS_CP_REFERENCES, type EupsCpReference } from "$/eups-references";
 import { calculateFcps, type FcpsResult } from "$/fcps";
 import { findNearestInmetStation, listInmetStations, type InmetNormalStation } from "$/inmet-normals";
 import { AppSidebar, type GeoCalcModule } from "@/components/AppSidebar";
@@ -9,13 +9,13 @@ import { Formula } from "@/components/Formula";
 import { InmetStationCombobox } from "@/components/InmetStationCombobox";
 import { MapPicker, type MapPoint } from "@/components/MapPicker";
 import { StaticCombobox } from "@/components/StaticCombobox";
+import { EupsSoilSelector, type EupsSoilSelectionValue } from "@/modules/eups/EupsSoilSelector";
 import { exportEupsWorkbook } from "@/lib/eups-excel-export";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shadcn/components/ui/tooltip";
 import "katex/dist/katex.min.css";
 import { ArrowDown, ArrowUp, BookOpen, Calculator, CheckCircle2, Clipboard, Download, Droplets, Leaf, MapPin, Maximize2, Minus, Mountain, Ruler, Sprout, X, Zap } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
-const SOIL_OPTIONS: Array<{ value: EupsSoilReference["id"]; label: string; description: string }> = EUPS_SOIL_REFERENCES.map((reference) => ({ value: reference.id, label: reference.label, description: reference.description }));
 const CP_OPTIONS: Array<{ value: EupsCpReference["id"]; label: string; description: string }> = EUPS_CP_REFERENCES.map((reference) => ({ value: reference.id, label: reference.label, description: reference.description }));
 const EUPS_INMET_PERIOD = "1991-2020" as const;
 
@@ -28,9 +28,8 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
   const [previewedRainfallStation, setPreviewedRainfallStation] = useState<InmetNormalStation | null>(null);
   const [rainfallHasManualAdjustments, setRainfallHasManualAdjustments] = useState(false);
   const [isRainfallMapExpanded, setIsRainfallMapExpanded] = useState(false);
-  const [soilReferenceId, setSoilReferenceId] = useState<EupsSoilReference["id"]>("custom");
+  const [soilSelection, setSoilSelection] = useState<EupsSoilSelectionValue>({ factorK: null, referenceLabel: "Valor personalizado" });
   const [cpReferenceId, setCpReferenceId] = useState<EupsCpReference["id"]>("custom");
-  const [kText, setKText] = useState("");
   const [slopeLengthText, setSlopeLengthText] = useState("");
   const [slopeText, setSlopeText] = useState("");
   const [cpText, setCpText] = useState("");
@@ -42,11 +41,10 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
   const rainfallLongitude = parseDecimal(rainfallLongitudeText);
   const rainfallCoordinatesAreValid = rainfallLatitude !== null && rainfallLongitude !== null && rainfallLatitude >= -90 && rainfallLatitude <= 90 && rainfallLongitude >= -180 && rainfallLongitude <= 180;
   const selectedRainfallStation = useMemo(() => selectedRainfallStationCode ? listInmetStations(EUPS_INMET_PERIOD).find((station) => station.code === selectedRainfallStationCode) ?? null : null, [selectedRainfallStationCode]);
-  const k = parseDecimal(kText);
+  const k = soilSelection.factorK;
   const slopeLength = parseDecimal(slopeLengthText);
   const slopePercent = parseDecimal(slopeText);
   const cp = parseDecimal(cpText);
-  const soilReference = EUPS_SOIL_REFERENCES.find((reference) => reference.id === soilReferenceId)!;
   const cpReference = EUPS_CP_REFERENCES.find((reference) => reference.id === cpReferenceId)!;
   const result = useMemo(() => calculateEups({ rainfall, k, slopeLength, slopePercent, cp }), [rainfall, k, slopeLength, slopePercent, cp]);
   const ccs = parseDecimal(ccsText);
@@ -76,11 +74,7 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [isRainfallMapExpanded]);
 
-  const selectSoilReference = (id: EupsSoilReference["id"]) => {
-    const reference = EUPS_SOIL_REFERENCES.find((item) => item.id === id)!;
-    setSoilReferenceId(id);
-    setKText(reference.suggestedK === null ? "" : formatInput(reference.suggestedK));
-  };
+  const selectSoil = useCallback((selection: EupsSoilSelectionValue) => setSoilSelection(selection), []);
   const selectCpReference = (id: EupsCpReference["id"]) => {
     const reference = EUPS_CP_REFERENCES.find((item) => item.id === id)!;
     setCpReferenceId(id);
@@ -108,7 +102,7 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
     setRainfallTexts((values) => values.map((current, itemIndex) => itemIndex === index ? value : current));
     if (selectedRainfallStationCode) setRainfallHasManualAdjustments(true);
   };
-  const summary = buildSummary({ result, k, slopeLength, slopePercent, cp, soilReference, cpReference, fcps });
+  const summary = buildSummary({ result, k, slopeLength, slopePercent, cp, soilReferenceLabel: soilSelection.referenceLabel, cpReference, fcps });
 
   return <TooltipProvider><div className="app-layout">
     <AppSidebar activeModule="eups" onModuleChange={onModuleChange} />
@@ -143,8 +137,8 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
 
       <section className="panel eups-input-panel">
         <PanelTitle icon={<Sprout className="size-4" />} title="Solo e erodibilidade" />
-        <Guidance title="O que representa K">K expressa a suscetibilidade do solo à desagregação e ao transporte pela água. Selecione uma referência didática da Tabela de referência EUPS e informe ou revise o valor de K adotado.</Guidance>
-        <div className="eups-full-inputs"><StaticCombobox id="eups-soil-reference" label="Referência de tipo de solo" value={soilReferenceId} options={SOIL_OPTIONS} onChange={selectSoilReference} placeholder="Selecionar referência" /><label className="eups-number-field" htmlFor="eups-k"><span>Fator K <small>t·h·MJ⁻¹·mm⁻¹</small></span><input id="eups-k" aria-label="Fator K" inputMode="decimal" value={kText} placeholder="Informar valor" onChange={(event) => setKText(event.target.value)} /><em>{soilReference.description}</em></label></div>
+        <Guidance title="O que representa K">K expressa a suscetibilidade do solo à desagregação e ao transporte pela água. Consulte o caminho taxonômico SiBCS para calcular K pela ponderação dos componentes ou informe um valor personalizado.</Guidance>
+        <EupsSoilSelector onChange={selectSoil} />
       </section>
 
       <section className="panel eups-input-panel">
@@ -163,13 +157,13 @@ export function EupsPage({ onModuleChange }: { onModuleChange: (module: GeoCalcM
         <PanelTitle icon={<Calculator className="size-4" />} title="Tabela de cálculo e resultado" description="Compilado das entradas manuais e das saídas calculadas para a estimativa de perda de solo." />
         <ResultSpotlight result={result} k={k} slopeLength={slopeLength} slopePercent={slopePercent} cp={cp} />
         <Legend />
-        <div className="table-wrap eups-final-table-wrap"><table className="eups-final-table"><thead><tr><th>Fator</th><th>Valor</th><th>Unidade</th><th>Tipo</th><th>Referência ou cálculo</th></tr></thead><tbody><CalculationRow factor="P" value={formatNumber(result.precipitationTotal, 1)} unit="mm" type="Saída" calculation="Soma das 12 precipitações mensais" output /><CalculationRow factor="R" value={formatNumber(result.rainfallErosivity, 2)} unit="MJ·mm·ha⁻¹·h⁻¹·ano⁻¹" type="Saída" calculation="ΣI30 calculado das chuvas mensais" output /><CalculationRow factor="K" value={formatNumber(k, 3)} unit="t·h·MJ⁻¹·mm⁻¹" type="Entrada" calculation={soilReference.label} /><CalculationRow factor="L" value={formatNumber(slopeLength, 1)} unit="m" type="Entrada" calculation="Comprimento horizontal informado" /><CalculationRow factor="S" value={formatNumber(slopePercent, 1)} unit="%" type="Entrada" calculation="Declividade informada" /><CalculationRow factor="LS" value={formatNumber(result.topographicFactor, 3)} unit="adimensional" type="Saída" calculation="Calculado a partir de L e S" output /><CalculationRow factor="CP" value={formatNumber(cp, 3)} unit="adimensional" type="Entrada" calculation={cpReference.label} /></tbody><tfoot><tr className="eups-final-result-row"><th scope="row"><span>PS</span></th><td className="eups-final-value">{formatNumber(result.soilLoss, 2)}</td><td>t/ha/ano</td><td><span className="eups-type-tag result">Resultado</span></td><td><strong>PS = K × R × LS × CP</strong><span>{result.classification ?? "Classificação pendente"}</span></td></tr></tfoot></table></div>
+        <div className="table-wrap eups-final-table-wrap"><table className="eups-final-table"><thead><tr><th>Fator</th><th>Valor</th><th>Unidade</th><th>Tipo</th><th>Referência ou cálculo</th></tr></thead><tbody><CalculationRow factor="P" value={formatNumber(result.precipitationTotal, 1)} unit="mm" type="Saída" calculation="Soma das 12 precipitações mensais" output /><CalculationRow factor="R" value={formatNumber(result.rainfallErosivity, 2)} unit="MJ·mm·ha⁻¹·h⁻¹·ano⁻¹" type="Saída" calculation="ΣI30 calculado das chuvas mensais" output /><CalculationRow factor="K" value={formatNumber(k, 4)} unit="t·h·MJ⁻¹·mm⁻¹" type="Entrada" calculation={soilSelection.referenceLabel} /><CalculationRow factor="L" value={formatNumber(slopeLength, 1)} unit="m" type="Entrada" calculation="Comprimento horizontal informado" /><CalculationRow factor="S" value={formatNumber(slopePercent, 1)} unit="%" type="Entrada" calculation="Declividade informada" /><CalculationRow factor="LS" value={formatNumber(result.topographicFactor, 3)} unit="adimensional" type="Saída" calculation="Calculado a partir de L e S" output /><CalculationRow factor="CP" value={formatNumber(cp, 3)} unit="adimensional" type="Entrada" calculation={cpReference.label} /></tbody><tfoot><tr className="eups-final-result-row"><th scope="row"><span>PS</span></th><td className="eups-final-value">{formatNumber(result.soilLoss, 2)}</td><td>t/ha/ano</td><td><span className="eups-type-tag result">Resultado</span></td><td><strong>PS = K × R × LS × CP</strong><span>{result.classification ?? "Classificação pendente"}</span></td></tr></tfoot></table></div>
         {result.isComplete ? <div className="eups-complete"><CheckCircle2 />Todos os fatores necessários foram informados. Revise as escolhas antes de interpretar o resultado.</div> : <div className="eups-errors" role="status"><strong>Para concluir:</strong><span>{result.errors[0] ?? "Revise os fatores informados."}</span></div>}
       </section>
 
       <FcpsPanel eupsComplete={result.isComplete} soilLoss={result.soilLoss} ccsText={ccsText} onCcsChange={setCcsText} result={fcps} />
 
-      <section className="panel report-panel eups-report-panel"><PanelTitle icon={<Clipboard className="size-4" />} title="Síntese dos resultados" description="Texto local para copiar em trabalhos, pesquisas e relatórios." /><textarea value={summary} readOnly aria-label="Síntese dos resultados da EUPS" /><div className="button-row"><button className="action-button" type="button" onClick={() => void navigator.clipboard.writeText(summary).then(() => setNotice("Síntese copiada para a área de transferência."))}><Clipboard />Copiar síntese</button><button className="secondary-button" type="button" onClick={() => void exportEupsWorkbook({ result, k, slopeLength, slopePercent, cp, soilReferenceLabel: soilReference.label, cpReferenceLabel: cpReference.label, fcps }).then(() => setNotice("Planilha Excel exportada com sucesso."))}><Download />Exportar Excel</button></div></section>
+      <section className="panel report-panel eups-report-panel"><PanelTitle icon={<Clipboard className="size-4" />} title="Síntese dos resultados" description="Texto local para copiar em trabalhos, pesquisas e relatórios." /><textarea value={summary} readOnly aria-label="Síntese dos resultados da EUPS" /><div className="button-row"><button className="action-button" type="button" onClick={() => void navigator.clipboard.writeText(summary).then(() => setNotice("Síntese copiada para a área de transferência."))}><Clipboard />Copiar síntese</button><button className="secondary-button" type="button" onClick={() => void exportEupsWorkbook({ result, k, slopeLength, slopePercent, cp, soilReferenceLabel: soilSelection.referenceLabel, cpReferenceLabel: cpReference.label, fcps }).then(() => setNotice("Planilha Excel exportada com sucesso."))}><Download />Exportar Excel</button></div></section>
       <ReferencePanel />
       {notice ? <div className="eups-notice" role="status">{notice}<button type="button" onClick={() => setNotice(null)} aria-label="Fechar aviso">×</button></div> : null}
     </main>
@@ -218,4 +212,4 @@ function parseDecimal(value: string): number | null { const normalized = value.t
 function formatInput(value: number): string { return value.toLocaleString("pt-BR", { maximumFractionDigits: 3 }); }
 function formatCoordinateInput(value: number): string { return value.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 }); }
 function formatNumber(value: number | null | undefined, digits = 1): string { return value === null || value === undefined || !Number.isFinite(value) ? "-" : value.toLocaleString("pt-BR", { minimumFractionDigits: digits, maximumFractionDigits: digits }); }
-function buildSummary({ result, k, slopeLength, slopePercent, cp, soilReference, cpReference, fcps }: { result: ReturnType<typeof calculateEups>; k: number | null; slopeLength: number | null; slopePercent: number | null; cp: number | null; soilReference: EupsSoilReference; cpReference: EupsCpReference; fcps: FcpsResult }) { const complementaryAnalysis = fcps.status === "complete" ? ["", "Análise complementar — FCPS:", `- Perda de solo utilizada (PS): ${formatNumber(fcps.soilLoss, 2)} t/ha/ano`, `- Concentração no solo (CCS): ${formatNumber(fcps.concentration, 3)} mg/kg`, `- Quantidade potencial associada ao solo perdido (QCPS): ${formatNumber(fcps.quantity, 5)} kg/ha/ano`, "- Fórmula: QCPS = PS × CCS × 10⁻³."] : []; return ["Síntese dos resultados — Perda de Solo (EUPS)", "", "Método: cálculo manual com 12 precipitações mensais, conforme a Tabela de referência EUPS.", `Situação: ${result.isComplete ? "cálculo concluído" : "pendente de entradas ou revisão"}`, "", "Chuva e erosividade:", `- Precipitação anual (P): ${formatNumber(result.precipitationTotal, 1)} mm`, `- Erosividade (R): ${formatNumber(result.rainfallErosivity, 2)} MJ·mm·ha⁻¹·h⁻¹·ano⁻¹`, "", "Fatores adotados:", `- Referência de solo: ${soilReference.label}`, `- K: ${formatNumber(k, 3)}`, `- L: ${formatNumber(slopeLength, 1)} m`, `- S: ${formatNumber(slopePercent, 1)} %`, `- LS: ${formatNumber(result.topographicFactor, 3)}`, `- Referência de CP: ${cpReference.label}`, `- CP: ${formatNumber(cp, 3)}`, "", `Perda média anual estimada (PS): ${formatNumber(result.soilLoss, 2)} t/ha/ano`, `Classificação: ${result.classification ?? "não calculada"}`, ...complementaryAnalysis, "", "Referências: Tabela de referência EUPS; Wischmeier e Smith (1965), USDA Agriculture Handbook No. 282."].join("\n"); }
+function buildSummary({ result, k, slopeLength, slopePercent, cp, soilReferenceLabel, cpReference, fcps }: { result: ReturnType<typeof calculateEups>; k: number | null; slopeLength: number | null; slopePercent: number | null; cp: number | null; soilReferenceLabel: string; cpReference: EupsCpReference; fcps: FcpsResult }) { const complementaryAnalysis = fcps.status === "complete" ? ["", "Análise complementar — FCPS:", `- Perda de solo utilizada (PS): ${formatNumber(fcps.soilLoss, 2)} t/ha/ano`, `- Concentração no solo (CCS): ${formatNumber(fcps.concentration, 3)} mg/kg`, `- Quantidade potencial associada ao solo perdido (QCPS): ${formatNumber(fcps.quantity, 5)} kg/ha/ano`, "- Fórmula: QCPS = PS × CCS × 10⁻³."] : []; return ["Síntese dos resultados — Perda de Solo (EUPS)", "", "Método: cálculo manual com 12 precipitações mensais, conforme a Tabela de referência EUPS.", `Situação: ${result.isComplete ? "cálculo concluído" : "pendente de entradas ou revisão"}`, "", "Chuva e erosividade:", `- Precipitação anual (P): ${formatNumber(result.precipitationTotal, 1)} mm`, `- Erosividade (R): ${formatNumber(result.rainfallErosivity, 2)} MJ·mm·ha⁻¹·h⁻¹·ano⁻¹`, "", "Fatores adotados:", `- Referência de solo: ${soilReferenceLabel}`, `- K: ${formatNumber(k, 3)}`, `- L: ${formatNumber(slopeLength, 1)} m`, `- S: ${formatNumber(slopePercent, 1)} %`, `- LS: ${formatNumber(result.topographicFactor, 3)}`, `- Referência de CP: ${cpReference.label}`, `- CP: ${formatNumber(cp, 3)}`, "", `Perda média anual estimada (PS): ${formatNumber(result.soilLoss, 2)} t/ha/ano`, `Classificação: ${result.classification ?? "não calculada"}`, ...complementaryAnalysis, "", "Referências: Tabela de referência EUPS; Wischmeier e Smith (1965), USDA Agriculture Handbook No. 282."].join("\n"); }

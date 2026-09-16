@@ -525,23 +525,44 @@ describe("App spreadsheet parity", () => {
     expect(screen.queryByRole("dialog", { name: "Mapa de estações INMET" })).toBeNull();
   });
 
-  test("aplica referências didáticas de K e CP sem preencher fatores espaciais", async () => {
+  test("permite informar K manualmente ou iniciar a consulta SiBCS", async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByRole("button", { name: "Perda de Solos (EUPS)" }));
 
-    await user.click(screen.getByRole("combobox", { name: "Referência de tipo de solo" }));
-    await user.click(screen.getByText("Areia quartzosa"));
+    fireEvent.change(screen.getByLabelText("Fator K"), { target: { value: "0,027" } });
     expect((screen.getByLabelText("Fator K") as HTMLInputElement).value).toBe("0,027");
+    expect(screen.getByText("0,0270")).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Informações sobre o cálculo de K" }));
+    const kInformation = await screen.findByRole("dialog", { name: "Tabela de conversão do fator K" });
+    expect(kInformation.textContent).toContain("4,8");
+    expect(kInformation.textContent).toContain("0,0495");
+    expect(kInformation.textContent).toContain("50%");
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Tabela de conversão do fator K" })).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Consulta SiBCS" }));
+    expect(screen.queryByRole("combobox", { name: "Número de componentes da unidade" })).toBeNull();
+    const order = await screen.findByRole("combobox", { name: "Ordem" });
+    await user.click(order);
+    await user.click(screen.getByText("ESPODOSSOLO"));
+    expect(screen.getByRole("combobox", { name: "Subordem" })).toBeTruthy();
+
+    expect((screen.getByRole("button", { name: "Adicionar C2" }) as HTMLButtonElement).disabled).toBe(true);
+    await user.click(screen.getByRole("combobox", { name: "Subordem" }));
+    await user.click(screen.getByText("FERRI-HUMILÚVICO"));
+    await user.click(screen.getByRole("combobox", { name: "Grande grupo" }));
+    await user.click(screen.getByText("HIDRO-HIPERESPESSO"));
+    expect(screen.getByText("Componente resolvido")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Adicionar C2" }));
+    expect(screen.getByRole("tab", { name: /C2 Pendente/ })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Remover C2" }));
+    expect(screen.queryByRole("tab", { name: /C2 Pendente/ })).toBeNull();
 
     await user.click(screen.getByRole("combobox", { name: "Referência de cobertura e manejo" }));
     await user.click(screen.getByText("Floresta nativa"));
     expect((screen.getByLabelText("Cobertura, manejo e conservação") as HTMLInputElement).value).toBe("0,01");
-
-    await user.click(screen.getByRole("combobox", { name: "Referência de tipo de solo" }));
-    await user.click(screen.getByText("Latossolo V-A"));
-    expect((screen.getByLabelText("Fator K") as HTMLInputElement).value).toBe("");
-    expect(screen.getByText(/Faixa de referência: 0,013 a 0,020/)).toBeTruthy();
   });
 
   test("mantém FCPS opcional, posterior à EUPS e restrita à sua própria validação", async () => {

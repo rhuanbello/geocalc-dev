@@ -1033,6 +1033,388 @@ button:disabled {
     gap: 12px;
 }
 
+.eups-soil-selector {
+    display: grid;
+    gap: 14px;
+}
+
+.eups-soil-mode-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.eups-soil-mode-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.eups-soil-mode-toggle button,
+.eups-soil-tabs button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 8px 11px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.eups-soil-mode-toggle button svg {
+    width: 16px;
+    height: 16px;
+}
+
+.eups-soil-information-button {
+    margin-left: auto;
+    color: var(--muted);
+}
+
+.eups-soil-mode-toggle button.active,
+.eups-soil-tabs button.active {
+    border-color: var(--brand-green);
+    background: var(--brand-green);
+    color: #fff;
+}
+
+.eups-soil-hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+.eups-soil-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.eups-soil-tabs button {
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    text-align: left;
+}
+
+.eups-soil-tabs button small {
+    overflow: hidden;
+    max-width: 100%;
+    color: inherit;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eups-soil-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    padding: 13px;
+    border: 1px solid rgb(0 155 110 / 0.22);
+    border-radius: 8px;
+    background: #fbfdfb;
+}
+
+.eups-soil-filter-grid .static-combobox-trigger,
+.eups-soil-filter-grid .static-combobox label {
+    text-transform: uppercase;
+}
+
+.eups-soil-filter-popover .static-option strong {
+    text-transform: uppercase;
+}
+
+.eups-soil-component-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding-top: 2px;
+}
+
+.eups-soil-component-actions > div {
+    display: grid;
+    flex: 1 1 230px;
+    gap: 2px;
+}
+
+.eups-soil-component-actions strong {
+    color: var(--brand-dark);
+    font-size: 0.8rem;
+}
+
+.eups-soil-component-actions span,
+.eups-soil-limit-note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.eups-soil-component-actions button {
+    min-height: 35px;
+}
+
+.eups-soil-component-actions .text-button {
+    color: #8a4b4b;
+}
+
+.eups-soil-loading,
+.eups-soil-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 11px 12px;
+    border: 1px solid rgb(0 155 110 / 0.25);
+    border-radius: 7px;
+    background: #f1faf5;
+    color: var(--brand-dark);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.eups-soil-loading svg,
+.eups-soil-status > svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    color: var(--brand-green);
+}
+
+.eups-soil-status > div {
+    display: grid;
+    gap: 3px;
+}
+
+.eups-soil-status span {
+    color: var(--muted);
+    font-size: 0.77rem;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.eups-soil-status.is-confirmation {
+    border-color: rgb(177 118 0 / 0.36);
+    background: #fffae9;
+}
+
+.eups-soil-status.is-confirmation > svg {
+    color: #a66e00;
+}
+
+.eups-soil-status.is-confirmation button {
+    justify-self: start;
+    min-height: 31px;
+    margin-top: 4px;
+    padding: 5px 9px;
+    border: 1px solid rgb(177 118 0 / 0.38);
+    border-radius: 5px;
+    background: #fff;
+    color: #805400;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 900;
+}
+
+.eups-soil-status.is-blocked {
+    border-color: rgb(177 68 68 / 0.28);
+    background: #fff5f4;
+}
+
+.eups-soil-status.is-blocked > svg {
+    color: #b14444;
+}
+
+.eups-soil-calculation {
+    display: grid;
+    gap: 11px;
+    padding: 13px;
+    border: 1px solid rgb(0 155 110 / 0.3);
+    border-radius: 8px;
+    background: #edf8f1;
+}
+
+.eups-soil-calculation > div:first-child {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.eups-soil-calculation > div:first-child span,
+.eups-soil-calculation p {
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.eups-soil-calculation > div:first-child strong {
+    color: var(--brand-dark);
+    font-family: "Roboto Slab", Georgia, serif;
+    font-size: 1.15rem;
+}
+
+.eups-soil-component-results {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.eups-soil-component-results > div {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid rgb(0 155 110 / 0.18);
+    border-radius: 6px;
+    background: rgb(255 255 255 / 0.7);
+}
+
+.eups-soil-component-results strong {
+    color: var(--brand-dark);
+    font-size: 0.8rem;
+}
+
+.eups-soil-component-results span,
+.eups-soil-component-results small {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+}
+
+.eups-soil-calculation p {
+    margin: 0;
+}
+
+.eups-soil-calculation p strong {
+    color: var(--brand-dark);
+}
+
+.eups-k-information-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgb(26 59 41 / 0.64);
+}
+
+.eups-k-information-modal {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: min(980px, 100%);
+    max-height: min(78vh, 800px);
+    overflow: hidden;
+    border: 1px solid rgb(0 155 110 / 0.32);
+    border-radius: 10px;
+    background: #fbfdfb;
+    box-shadow: 0 26px 80px rgb(8 31 20 / 0.36);
+}
+
+.eups-k-information-modal > header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 16px;
+    padding: 15px 17px 14px;
+    border-bottom: 1px solid rgb(0 155 110 / 0.2);
+    background: #f6fbf8;
+}
+
+.eups-k-information-modal h2,
+.eups-k-information-modal h3 {
+    margin: 0;
+    color: var(--brand-dark);
+    font-family: "Roboto Slab", Georgia, serif;
+}
+
+.eups-k-information-modal h2 {
+    font-size: 1.15rem;
+}
+
+.eups-k-information-modal h3 {
+    font-size: 0.92rem;
+}
+
+.eups-k-information-modal header p {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.eups-k-information-modal > header button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid rgb(0 155 110 / 0.28);
+    border-radius: 5px;
+    background: #fff;
+    color: var(--brand-dark);
+}
+
+.eups-k-information-modal > header button svg {
+    width: 18px;
+    height: 18px;
+}
+
+.eups-k-information-modal > .eups-soil-loading,
+.eups-k-information-modal > .eups-soil-status {
+    margin: 16px;
+}
+
+.eups-k-information-content {
+    display: grid;
+    align-content: start;
+    gap: 18px;
+    overflow: auto;
+    padding: 17px;
+}
+
+.eups-k-information-content section {
+    display: grid;
+    gap: 8px;
+}
+
+.eups-k-information-content table {
+    min-width: 100%;
+    font-size: 0.8rem;
+}
+
+.eups-k-information-content th,
+.eups-k-information-content td {
+    padding: 8px 10px;
+}
+
+.eups-k-conversion-table-wrap {
+    max-height: 330px;
+}
+
+.eups-k-conversion-table-wrap thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
 .eups-input-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2033,6 +2415,10 @@ textarea:focus {
     background: #fff;
 }
 
+.secondary-button.eups-soil-information-button {
+    color: var(--muted);
+}
+
 .action-button {
     padding: 0 14px;
     border: 0;
@@ -3006,5 +3392,34 @@ td.input-cell input.input-invalid:focus {
     .table-heading {
         grid-template-columns: 1fr;
         display: grid;
+    }
+
+    .eups-soil-filter-grid,
+    .eups-soil-component-results {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .eups-soil-information-button {
+        margin-left: 0;
+    }
+
+    .eups-k-information-backdrop {
+        padding: 12px;
+    }
+
+    .eups-k-information-modal {
+        max-height: calc(100vh - 24px);
+    }
+}
+
+@media (max-width: 480px) {
+    .eups-soil-mode-toggle button {
+        flex: 1;
+    }
+
+    .eups-soil-tabs,
+    .eups-soil-filter-grid,
+    .eups-soil-component-results {
+        grid-template-columns: 1fr;
     }
 }
